@@ -1,0 +1,5 @@
+seed: 42
+paths:
+  data_dir: data
+  results_dir: results
+  mlflow_uri: sqlite:///mlflow.db

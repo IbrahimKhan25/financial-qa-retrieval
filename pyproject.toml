@@ -1,0 +1,23 @@
+[project]
+name = "finqa"
+version = "0.1.0"
+description = "Fine-tuned retrieval and reranking for financial QA (BEIR FiQA-2018), with quality/latency tradeoffs"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyyaml",
+]
+
+[dependency-groups]
+# Groups are added per phase so installs stay small (eval/serve arrive in later phases).
+train = ["torch", "mlflow"]
+dev = ["pytest", "ruff"]
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
