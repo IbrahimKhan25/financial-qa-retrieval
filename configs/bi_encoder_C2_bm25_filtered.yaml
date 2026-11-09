@@ -1,0 +1,14 @@
+# C2 (optional extra): in-batch + BM25 hard negatives with docs that are positives for ANY train query removed (false-negative filter)
+name: bi_encoder_C2_bm25_filtered
+init: sentence-transformers/all-MiniLM-L6-v2
+epochs: 3
+batch_size: 64
+lr: 2.0e-5
+temperature: 0.05
+max_len: 256
+warmup_ratio: 0.1
+weight_decay: 0.01
+seed: 42
+eval_at_start: true
+negatives:
+  - data/negatives/bm25_filtered.json

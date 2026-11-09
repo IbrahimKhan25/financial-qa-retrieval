@@ -24,6 +24,8 @@ def main():
     ap.add_argument("--window", type=int, nargs=2, default=[10, 100], metavar=("LO", "HI"),
                     help="sample from ranks LO..HI (skips the top, where false negatives hide)")
     ap.add_argument("--max-per-query", type=int, default=20)
+    ap.add_argument("--exclude-train-positives", action="store_true",
+                    help="also drop docs that are positives for ANY train query (false-negative filter)")
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
     set_seed(args.seed)
@@ -31,7 +33,10 @@ def main():
     d = fiqa.download()
     corpus, queries = fiqa.load_corpus(d), fiqa.load_queries(d)
     train_qrels = fiqa.load_qrels(d, "train")
-    forbidden = forbidden_doc_ids(fiqa.load_qrels(d, "dev"), fiqa.load_qrels(d, "test"))
+    held_out = [fiqa.load_qrels(d, "dev"), fiqa.load_qrels(d, "test")]
+    forbidden = forbidden_doc_ids(*held_out)
+    if args.exclude_train_positives:
+        forbidden |= forbidden_doc_ids(train_qrels)
     doc_ids = list(corpus)
     doc_texts = [fiqa.doc_text(corpus[i]) for i in doc_ids]
     qids = sorted(train_qrels)
@@ -50,10 +55,13 @@ def main():
 
     pos_all = {d for rel in train_qrels.values() for d in rel}
     leaked = {d for docs in negs.values() for d in docs} & forbidden
-    assert not leaked, f"{len(leaked)} dev/test positives in the negative pool"
+    assert not leaked, f"{len(leaked)} forbidden docs in the negative pool"
+    held_out_docs = forbidden_doc_ids(*held_out)
+    assert not {d for docs in negs.values() for d in docs} & held_out_docs, "dev/test positive leaked"
     counts = [len(v) for v in negs.values()]
     meta = {"source": args.source, "checkpoint": args.checkpoint, "k": args.k,
             "window": args.window, "max_per_query": args.max_per_query, "seed": args.seed,
+            "exclude_train_positives": args.exclude_train_positives,
             "n_queries": len(negs), "queries_with_negatives": sum(1 for c in counts if c),
             "mean_negatives_per_query": round(sum(counts) / len(counts), 2),
             "forbidden_docs_excluded": len(forbidden)}
