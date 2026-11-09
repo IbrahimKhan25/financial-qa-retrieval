@@ -1,0 +1,15 @@
+# D: in-batch + BM25 + negatives mined from model C (init from base, not from C)
+name: bi_encoder_D_mined
+init: sentence-transformers/all-MiniLM-L6-v2
+epochs: 3
+batch_size: 64
+lr: 2.0e-5
+temperature: 0.05
+max_len: 256
+warmup_ratio: 0.1
+weight_decay: 0.01
+seed: 42
+eval_at_start: true
+negatives:
+  - data/negatives/bm25.json
+  - data/negatives/mined_C.json
