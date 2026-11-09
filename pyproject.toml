@@ -5,6 +5,7 @@ description = "Fine-tuned retrieval and reranking for financial QA (BEIR FiQA-20
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
+    "certifi>=2026.10.23",
     "numpy",
     "pandas",
     "pyyaml",
@@ -12,8 +13,17 @@ dependencies = [
 
 [dependency-groups]
 # Groups are added per phase so installs stay small (eval/serve arrive in later phases).
-train = ["torch", "mlflow"]
+train = [
+    "torch",
+    "mlflow",
+    "sentence-transformers>=6.2.0",
+]
 dev = ["pytest", "ruff"]
+eval = [
+    "bm25s>=0.3.16",
+    "pytrec-eval-terrier>=0.5.11",
+    "scipy>=1.17.1",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]

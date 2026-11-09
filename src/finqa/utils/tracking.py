@@ -27,4 +27,5 @@ def start_run(experiment: str, run_name: str, params: dict, config_path: str | N
 
 
 def log_metrics(metrics: dict, step: int | None = None) -> None:
-    mlflow.log_metrics(metrics, step=step)
+    # MLflow metric names disallow "@" (e.g. "ndcg@10"), so spell it "_at_".
+    mlflow.log_metrics({k.replace("@", "_at_"): v for k, v in metrics.items()}, step=step)
