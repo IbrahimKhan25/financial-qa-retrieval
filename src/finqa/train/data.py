@@ -48,6 +48,22 @@ def load_negatives(paths: list[str]) -> dict[str, list[str]]:
     return merged
 
 
+def sample_group(qid: str, pos_doc: str, negatives: dict[str, list[str]], positives: set[str],
+                 all_doc_ids: list[str], rng: random.Random, n_neg: int) -> list[str]:
+    """[positive] + n_neg distinct negatives for the cross-encoder's group softmax.
+
+    Mined negatives are used first; any shortfall is filled with random corpus docs. No negative
+    is ever a known positive of the query.
+    """
+    pool = [d for d in negatives.get(qid, []) if d not in positives]
+    negs = rng.sample(pool, min(n_neg, len(pool)))
+    while len(negs) < n_neg:
+        d = rng.choice(all_doc_ids)
+        if d not in positives and d not in negs:
+            negs.append(d)
+    return [pos_doc, *negs]
+
+
 def sample_negative(qid: str, negatives: dict[str, list[str]], positives: set[str],
                     all_doc_ids: list[str], rng: random.Random) -> str:
     """A mined hard negative if the query has any, else a random corpus doc that is not a positive."""

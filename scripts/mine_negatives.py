@@ -4,11 +4,12 @@ Dev and test positives are excluded from the pool (see finqa.train.negatives). W
 {"meta": ..., "negatives": {query_id: [doc ids]}}.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
 from finqa.data import fiqa
-from finqa.eval.dense_eval import search
+from finqa.eval.dense_eval import encode_cached, search
 from finqa.retrieval.bm25 import BM25Retriever
 from finqa.train.model import BiEncoder, pick_device
 from finqa.train.negatives import forbidden_doc_ids, mine_hard_negatives
@@ -48,7 +49,10 @@ def main():
         assert args.checkpoint, "--checkpoint is required for --source dense"
         device = pick_device()
         model = BiEncoder(args.checkpoint).to(device)
-        idx = search(model.encode(q_texts), model.encode(doc_texts), k=args.k, device=device)
+        weights = Path(args.checkpoint) / "model.safetensors"
+        key = f"finetuned-{hashlib.sha256(weights.read_bytes()).hexdigest()[:10]}"
+        d_emb = encode_cached(model, doc_texts, key)  # reuses the cache the hybrid run filled
+        idx = search(model.encode(q_texts), d_emb, k=args.k, device=device)
     ranked = {q: [doc_ids[j] for j in row] for q, row in zip(qids, idx)}
 
     negs = mine_hard_negatives(ranked, train_qrels, forbidden, tuple(args.window), args.max_per_query)

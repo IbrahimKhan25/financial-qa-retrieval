@@ -1,0 +1,17 @@
+# Cross-encoder fine-tuning: listwise group softmax, 1 positive + (group_size - 1) negatives per query.
+name: cross_encoder_ft
+init: cross-encoder/ms-marco-MiniLM-L-6-v2
+epochs: 2
+queries_per_batch: 8
+group_size: 8
+lr: 2.0e-5
+weight_decay: 0.01
+warmup_ratio: 0.1
+max_len: 256
+seed: 42
+# Candidates the dev epochs rerank (made by scripts/make_candidates.py, chosen on dev).
+dev_candidates: data/candidates/dev_hybrid_D.json
+# Negatives for TRAIN queries, mined with window 0..100 (see notebook); dev/test positives excluded.
+negatives:
+  - data/negatives/ce_bm25.json
+  - data/negatives/ce_dense_D.json

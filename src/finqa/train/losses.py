@@ -21,6 +21,15 @@ def false_negative_mask(qids: list[str], doc_ids: list[str],
     return mask
 
 
+def group_cross_entropy(scores: torch.Tensor) -> torch.Tensor:
+    """scores: [B, G]; column 0 is each query's positive, the rest are its sampled negatives.
+
+    Softmax over the group, so the positive must outscore every negative for the same query.
+    """
+    labels = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
+    return F.cross_entropy(scores, labels)
+
+
 def info_nce(q: torch.Tensor, d: torch.Tensor, mask: torch.Tensor, scale: float) -> torch.Tensor:
     """q: [B, E] queries; d: [N, E] docs with d[i] the positive of q[i] (N >= B).
 
