@@ -18,7 +18,11 @@ train = [
     "mlflow",
     "sentence-transformers>=6.2.0",
 ]
-dev = ["pytest", "ruff"]
+dev = [
+    "httpx>=0.28.1",
+    "pytest",
+    "ruff",
+]
 eval = [
     "bm25s>=0.3.16",
     "pytrec-eval-terrier>=0.5.11",
@@ -27,6 +31,14 @@ eval = [
 optimize = [
     "onnx>=1.23.2",
     "onnxruntime>=1.31.1",
+]
+serve = [
+    "bm25s>=0.3.16",
+    "fastapi>=0.162.2",
+    "numpy>=2.4.6",
+    "onnxruntime>=1.31.1",
+    "tokenizers>=0.23.3",
+    "uvicorn>=0.54.0",
 ]
 
 [build-system]

@@ -26,13 +26,19 @@ def minmax(items: list[tuple[str, float]], floor: float = FLOOR) -> dict[str, fl
     return {d: floor + (1 - floor) * ((s - lo) / span if span > 0 else 1.0) for d, s in items}
 
 
-def weighted(dense: list[tuple[str, float]], lexical: list[tuple[str, float]],
-             alpha: float, top: int = 100) -> list[str]:
-    """alpha = 1 reproduces the dense ranking and alpha = 0 the lexical one.
+def weighted_scored(dense: list[tuple[str, float]], lexical: list[tuple[str, float]],
+                    alpha: float, top: int = 100) -> list[tuple[str, float]]:
+    """alpha = 1 reproduces the dense ranking and alpha = 0 the lexical one; returns (doc_id, fused score).
 
     A doc missing from one list scores 0 from that system.
     """
     nd, nl = minmax(dense), minmax(lexical)
     docs = list(dict.fromkeys([d for d, _ in dense] + [d for d, _ in lexical]))
     fused = {d: alpha * nd.get(d, 0.0) + (1 - alpha) * nl.get(d, 0.0) for d in docs}
-    return sorted(docs, key=lambda d: -fused[d])[:top]
+    return [(d, fused[d]) for d in sorted(docs, key=lambda d: -fused[d])[:top]]
+
+
+def weighted(dense: list[tuple[str, float]], lexical: list[tuple[str, float]],
+             alpha: float, top: int = 100) -> list[str]:
+    """Doc ids only; see weighted_scored."""
+    return [d for d, _ in weighted_scored(dense, lexical, alpha, top)]
