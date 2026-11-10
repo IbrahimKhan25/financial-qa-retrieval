@@ -94,7 +94,7 @@ def main():
                 qs, ds = [], []
                 for i in batch:
                     q, p = pairs[i]
-                    group = sample_group(q, p, negatives, pos_of[q], all_doc_ids, rng, g - 1)
+                    group = sample_group(q, p, negatives, pos_of[q], all_doc_ids, rng, g - 1, cfg.get("random_per_group", 0))
                     qs += [queries[q]] * g
                     ds += [text[x] for x in group]
                 tok = {k: v.to(device) for k, v in model.tokenize(qs, ds).items()}

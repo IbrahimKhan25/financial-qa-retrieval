@@ -88,3 +88,15 @@ def test_real_reranker_gives_finite_correct_cpu_scores():
         ["A payment made to shareholders out of company profits.",
          "Paying down debt guarantees a return equal to the loan interest rate."])
     assert np.allclose(s, [-2.023, -10.181], atol=0.01)
+
+
+def test_sample_group_random_negatives_are_not_from_the_mined_pool_and_not_positives():
+    rng = random.Random(3)
+    mined = {f"m{i}" for i in range(20)}
+    positives = {"p", "p2"}
+    docs = [f"d{i}" for i in range(500)] + ["p", "p2"]  # the random universe excludes the mined docs
+    for _ in range(40):
+        g = sample_group("q", "p", {"q": sorted(mined)}, positives, docs, rng, 7, n_random=3)
+        assert g[0] == "p" and len(g) == 8 and len(set(g)) == 8
+        assert len(set(g[1:]) & mined) <= 4          # at most n_neg - n_random come from the mined pool
+        assert not set(g[1:]) & positives

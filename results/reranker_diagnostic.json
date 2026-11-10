@@ -1,0 +1,39 @@
+{
+ "n_groups": 300,
+ "group_size": 8,
+ "seed": 0,
+ "chance_top1": 0.125,
+ "split": "train",
+ "results": {
+  "hard": {
+   "off_the_shelf": {
+    "positive_first": 0.36666666666666664,
+    "mean_reciprocal_rank": 0.5201746031746032
+   },
+   "fine_tuned": {
+    "positive_first": 0.5266666666666666,
+    "mean_reciprocal_rank": 0.676218253968254
+   }
+  },
+  "random": {
+   "off_the_shelf": {
+    "positive_first": 0.9366666666666666,
+    "mean_reciprocal_rank": 0.9621666666666666
+   },
+   "fine_tuned": {
+    "positive_first": 0.16333333333333333,
+    "mean_reciprocal_rank": 0.30075793650793653
+   }
+  }
+ },
+ "hardware": {
+  "cpu_model": "Apple M2",
+  "logical_cores": 8,
+  "threads_used": null,
+  "ram_gb": 8.0,
+  "platform": "macOS-15.6.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "python": "3.11.1",
+  "device": "mps"
+ }
+}

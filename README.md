@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) in progress: off-the-shelf reranker measured, fine-tuned reranker pending; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F (Docker timing pending).
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) in progress: off-the-shelf reranker measured, fine-tuned run 1 was worse and diagnosed, run 2 pending; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F (Docker timing pending).
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -217,6 +217,41 @@ that ONNX and int8 must beat.
 Caveats: one off-the-shelf model, one seed for everything upstream; the hybrid's alpha and row D were chosen on dev;
 no test-set number has been computed. Tuning a blend of reranker and first-stage scores was not tried.
 
+### Fine-tuned reranker, run 1 (dev): it got worse
+
+The off-the-shelf reranker hurt a strong first stage, so I fine-tuned it on FiQA training questions: listwise group softmax over
+1 correct post plus 7 hard negatives per question (mined with BM25 and with the fine-tuned bi-encoder, ranks 0 to 100, dev and test answers
+excluded), 8 questions per step, learning rate 2e-5, 2 epochs, seed 42, Tesla T4 with fp16 (about 7.6 minutes per epoch).
+Each epoch reranks the dev candidates; epoch 0 below is the untouched model and reproduces the local 0.365 exactly.
+
+| System (dev, rerank top 100 of the hybrid candidates) | NDCG@10 [95% CI] | MRR@10 | Recall@100 |
+|---|---|---|---|
+| First stage only (hybrid, no reranking) | 0.444 [0.411, 0.477] | 0.515 | 0.742 |
+| Off-the-shelf reranker (epoch 0) | 0.365 [0.334, 0.396] | 0.436 | 0.742 |
+| Fine-tuned, run 1, epoch 1 | 0.289 | 0.351 | 0.742 |
+| Fine-tuned, run 1, epoch 2 (best epoch on dev) | 0.296 [0.265, 0.327] | 0.356 | 0.742 |
+
+Fine-tuned minus off-the-shelf: NDCG@10 -0.069 [-0.091, -0.049]; fine-tuned minus the first stage alone:
+-0.148 [-0.174, -0.122] (paired bootstrap, 500 queries). The training loss fell only from 1.88 to 1.50
+(a random guess among 8 candidates scores 2.08).
+
+**Is it a bug?** A diagnostic on training groups (`scripts/diagnose_reranker.py`, results in `results/reranker_diagnostic.json`) points away from a plain coding bug: the model did learn its task, and
+at the same time it lost something more basic.
+
+| Training groups of 8 (300 train queries) | Off-the-shelf: positive ranked first | Fine-tuned: positive ranked first |
+|---|---|---|
+| Hard negatives (the training distribution) | 36.7% (MRR 0.52) | 52.7% (MRR 0.68) |
+| Random documents (easy) | 93.7% (MRR 0.96) | 16.3% (MRR 0.30) |
+
+Fine-tuning improved the hard cases it practised on, but the model collapsed on easy ones (from 94% to 16% against
+a chance level of 12.5%). A likely reason, which run 2 tests, is that it only ever saw hard negatives, with no easy ones to anchor its basic sense of relevance. A second suspected contributor (not tested): 53% of the
+BM25 negatives and 60% of the dense negatives are answers to *other* training questions, so many are probably unlabeled good answers (false negatives).
+Learning rate and epoch count were not varied.
+
+**Run 2 (configured, not yet run):** the same recipe with 3 of the 7 negatives per group replaced by random documents (`configs/cross_encoder_ft_mixed.yaml`),
+chosen from this training-set diagnostic, not by looking at dev scores. It is one planned retry; if it also fails to beat the first stage, the conclusion is that
+this reranker does not help on this data and the serving default will be retrieval only.
+
 ### Inference optimization: ONNX export, graph fusion and int8 quantization (dev)
 
 Both neural pieces were exported to ONNX (opset 17, dynamic batch and length) in two ways. The **default export** uses
@@ -323,7 +358,7 @@ my first guess, oneDNN, was tested and was wrong). Quality numbers were unaffect
 about 5 to 15% of the earlier ones, the code now raises on NaN, and a regression test pins correct scores. (2) The first
 Phase 5 conclusion that ONNX was not faster was caused by the missing fusion step, described above.
 
-Fine-tuned reranker, Docker latency, serving and the test split: *pending (later phases)*.
+Fine-tuned reranker run 2, Docker latency, serving and the test split: *pending (later phases)*.
 
 ## Reproduce
 
