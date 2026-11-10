@@ -13,6 +13,10 @@ class CrossEncoder(nn.Module):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(name_or_path)
         self.model = AutoModelForSequenceClassification.from_pretrained(name_or_path, num_labels=1)
+        # Weights loaded straight from the safetensors file made the CPU forward pass return NaN for this
+        # model (macOS arm64, torch 2.15); copying them into fresh memory fixes it. Disabling oneDNN did not.
+        for t in [*self.model.parameters(), *self.model.buffers()]:
+            t.data = t.data.clone()
         self.max_length = max_length
 
     def tokenize(self, queries: list[str], docs: list[str]) -> dict:
@@ -39,6 +43,8 @@ class CrossEncoder(nn.Module):
             with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=use_amp):
                 out[idx] = self(**tok).float().cpu().numpy()
         self.train(was_training)
+        if np.isnan(out).any():
+            raise RuntimeError("cross-encoder produced NaN scores (see the weight-copy note in __init__)")
         return out
 
     def save(self, path: str) -> None:

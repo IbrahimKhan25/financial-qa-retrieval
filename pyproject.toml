@@ -24,6 +24,10 @@ eval = [
     "pytrec-eval-terrier>=0.5.11",
     "scipy>=1.17.1",
 ]
+optimize = [
+    "onnx>=1.23.2",
+    "onnxruntime>=1.31.1",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]

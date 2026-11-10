@@ -67,3 +67,24 @@ def test_score_shape_order_and_determinism(ce):
     s1, s2 = ce.score(qs, ds, batch_size=2), ce.score(qs, ds, batch_size=3)
     assert s1.shape == (3,) and np.allclose(s1, s2, atol=1e-4)
     assert abs(s1[0] - s1[2]) < 1e-4  # identical pairs score identically, whatever the batching
+
+
+def test_score_raises_instead_of_returning_nan(ce, monkeypatch):
+    monkeypatch.setattr(type(ce.model), "forward", lambda self, **kw: type("O", (), {"logits": torch.full((len(kw["input_ids"]), 1), float("nan"))})())
+    with pytest.raises(RuntimeError, match="NaN"):
+        ce.score(["q"], ["d"])
+
+
+def test_real_reranker_gives_finite_correct_cpu_scores():
+    # Regression for a real bug: weights loaded straight from the safetensors file made this model return
+    # NaN on CPU (macOS arm64). Expected values were cross-checked against the GPU and ONNX scores.
+    from huggingface_hub import try_to_load_from_cache
+
+    name = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    if not isinstance(try_to_load_from_cache(name, "model.safetensors"), str):
+        pytest.skip("reranker weights not cached")
+    s = CrossEncoder(name).to("cpu").score(
+        ["what is a dividend", "pay off mortgage early"],
+        ["A payment made to shareholders out of company profits.",
+         "Paying down debt guarantees a return equal to the loan interest rate."])
+    assert np.allclose(s, [-2.023, -10.181], atol=0.01)

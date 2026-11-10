@@ -11,3 +11,4 @@ checkpoints/
 *.pt
 *.safetensors
 .DS_Store
+onnx_models/
