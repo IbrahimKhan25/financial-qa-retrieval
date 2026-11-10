@@ -2,6 +2,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
@@ -9,8 +10,18 @@ from pydantic import BaseModel, Field, field_validator
 
 from finqa.serve.pipeline import Retriever
 from finqa.serve.store import load_artifacts
+from finqa.utils.hardware import describe
 
 log = logging.getLogger("finqa.serve")
+
+
+def _cpu_limit() -> float | None:
+    """CPUs the container may use (docker run --cpus), or None when there is no limit."""
+    try:
+        quota, period = Path("/sys/fs/cgroup/cpu.max").read_text().split()
+        return None if quota == "max" else int(quota) / int(period)
+    except (OSError, ValueError):
+        return None
 
 
 class SearchRequest(BaseModel):
@@ -47,6 +58,8 @@ class SearchResponse(BaseModel):
 def create_app(artifacts_dir: str | None = None, threads: int | None = None) -> FastAPI:
     directory = artifacts_dir or os.environ.get("FINQA_ARTIFACTS", "serving_artifacts")
     n_threads = threads or int(os.environ.get("FINQA_ORT_THREADS", "4"))
+    # Reported by /ready so a load test can record the machine the server really ran on.
+    hardware = {**describe(n_threads), "in_docker": os.path.exists("/.dockerenv"), "cpu_limit": _cpu_limit()}
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -67,7 +80,8 @@ def create_app(artifacts_dir: str | None = None, threads: int | None = None) -> 
             raise HTTPException(status_code=503, detail="artifacts not loaded")
         m = r.art.manifest
         return {"status": "ready", "docs": len(r.art.doc_ids), "alpha": r.default_alpha,
-                "reranker": r.art.reranker is not None, "model": m.get("bi_encoder_sha256_10"), "built_at": m.get("built_at")}
+                "reranker": r.art.reranker is not None, "model": m.get("bi_encoder_sha256_10"), "built_at": m.get("built_at"),
+                "hardware": hardware}
 
     @app.post("/search", response_model=SearchResponse)
     def search(req: SearchRequest):

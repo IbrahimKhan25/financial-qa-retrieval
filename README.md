@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F (Docker timing pending).
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 (Docker run pending).
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -364,7 +364,51 @@ my first guess, oneDNN, was tested and was wrong). Quality numbers were unaffect
 about 5 to 15% of the earlier ones, the code now raises on NaN, and a regression test pins correct scores. (2) The first
 Phase 5 conclusion that ONNX was not faster was caused by the missing fusion step, described above.
 
-Docker latency, serving and the test split: *pending (later phases)*.
+## Serving (Phase 6)
+
+A FastAPI service answers `POST /search` with the hybrid retriever (BM25 + fine-tuned bi-encoder, alpha 0.8). The
+cross-encoder is available behind `"rerank": true` and is **off by default**, because it did not improve dev quality
+(see above) and costs about 100 ms per request.
+
+Design choices:
+
+- **No PyTorch at serving time.** The service uses ONNX Runtime and the `tokenizers` library only (a test fails if `torch`
+  is ever imported). The serving environment is 136 MB of packages.
+- **Artifacts are built once, offline** (`scripts/build_serving_artifacts.py`): document embeddings, the BM25 index, a
+  memory-mapped text store, the fused fp32 question encoder, the fused int8 reranker, and a manifest with the git commit,
+  model hashes and the dev scores the pipeline is expected to reproduce. They are baked into the Docker image, so one
+  image is one model version.
+- **Search is exact**: one matrix-vector product over all 57,638 document vectors (a few ms), so no approximate index is needed at this size.
+- **Correctness before speed.** `scripts/check_serving_parity.py` reruns all 500 dev queries through the serving code and
+  must match the offline NDCG@10 before anything is timed (`results/serving_parity_dev.json`): dense 0.4281, BM25 0.2312,
+  hybrid 0.4439, all equal to the offline numbers.
+- `/health` says the process is up; `/ready` says the models and index are loaded and reports the hardware it runs on.
+  Requests are validated (blank query, `k` over 100 and unknown modes return 422).
+
+### Load test (Locust)
+
+Hardware: Apple M2, 8 logical cores, 8.0 GB RAM, ONNX Runtime with 4 threads, one uvicorn worker,
+**outside Docker** (`results/load_test_mac_native.json`). Closed loop (each simulated user sends its next request as soon
+as the previous one returns), `k = 10`, random dev queries, 5 s warm-up then 20 s measured, times are end to end over HTTP.
+
+| Scenario | Concurrent users | Requests/s | p50 ms | p95 ms | p99 ms | Failures |
+|---|---|---|---|---|---|---|
+| retrieve only (default) | 1 | 172 | 5.7 | 6.9 | 8.5 | 0 |
+| retrieve only (default) | 4 | 278 | 14.3 | 18.8 | 20.6 | 0 |
+| retrieve only (default) | 16 | 299 | 52.3 | 77.5 | 91.6 | 0 |
+| retrieve only (default) | 64 | 301 | 212.1 | 267.6 | 325.2 | 0 |
+| retrieve + rerank top 10 | 1 | 9 | 112.2 | 115.7 | 119.6 | 0 |
+| retrieve + rerank top 10 | 4 | 12 | 331.2 | 406.2 | 589.0 | 0 |
+
+Reading it: one request takes about 6 ms on its own. Throughput tops out near 300 requests/s on this machine; beyond that,
+adding users only adds waiting time, which is why p95 grows with the user count. Reranking 10 candidates cuts throughput
+by roughly 20 times, the price of a step that did not improve quality here.
+
+Caveats: one run per scenario; the Locust client runs on the same 8-core laptop as the server and competes with it for
+CPU, so these numbers are a lower bound on server capacity; localhost has no network latency; load-test queries are the
+dev queries, used here for speed only. The same test inside Docker on the Intel i7-9700F: *pending*.
+
+Test-split numbers: *pending (final phase)*.
 
 ## Reproduce
 
@@ -378,3 +422,14 @@ uv run pytest -q
 Phase 2 training runs on a GPU: open `notebooks/colab_train.ipynb` in Colab (T4) and run the cells in order;
 it mines negatives and trains rows B, C, C2 and D, writing `results/train_*.json`.
 Phase 3 (`uv run python scripts/run_hybrid.py`) needs the row D checkpoint from that run in `checkpoints/bi_encoder_D_mined`.
+
+Phase 6 (serving), after the checkpoints and ONNX models exist:
+
+```bash
+uv sync --all-groups
+uv run python scripts/build_serving_artifacts.py     # writes serving_artifacts/ (not in git)
+uv run python scripts/check_serving_parity.py        # must print OK three times
+docker build -t finqa-serve .
+docker run --rm -p 8000:8000 --cpus 4 finqa-serve
+uv run python scripts/run_load_test.py --host http://localhost:8000 --tag x86_docker
+```

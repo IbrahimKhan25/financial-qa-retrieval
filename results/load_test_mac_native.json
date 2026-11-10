@@ -1,0 +1,108 @@
+{
+ "tag": "mac_native",
+ "server": {
+  "status": "ready",
+  "docs": 57638,
+  "alpha": 0.8,
+  "reranker": true,
+  "model": "3538e24906",
+  "built_at": "2026-11-10T10:34:14+00:00",
+  "hardware": {
+   "cpu_model": "Apple M2",
+   "logical_cores": 8,
+   "threads_used": 4,
+   "ram_gb": 8.0,
+   "platform": "macOS-15.6.1-arm64-arm-64bit",
+   "machine": "arm64",
+   "python": "3.11.1",
+   "in_docker": false,
+   "cpu_limit": null
+  }
+ },
+ "client_hardware": {
+  "cpu_model": "Apple M2",
+  "logical_cores": 8,
+  "threads_used": null,
+  "ram_gb": 8.0,
+  "platform": "macOS-15.6.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "python": "3.11.1"
+ },
+ "note": "closed loop (no think time), k=10, hybrid; the Locust client runs on the same machine as the server and competes for CPU; times are end to end over HTTP on localhost; one run per scenario",
+ "warmup_s": 5,
+ "duration_s": 20,
+ "scenarios": {
+  "retrieve_u1": {
+   "users": 1,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 3469,
+   "failures": 0,
+   "requests_per_second": 171.7332505427936,
+   "p50_ms": 5.652375519275665,
+   "p95_ms": 6.922199949622153,
+   "p99_ms": 8.455021753907204,
+   "mean_ms": 5.781426909010515
+  },
+  "retrieve_u4": {
+   "users": 4,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 5601,
+   "failures": 0,
+   "requests_per_second": 277.8144151008416,
+   "p50_ms": 14.276249334216118,
+   "p95_ms": 18.766124732792377,
+   "p99_ms": 20.60704119503498,
+   "mean_ms": 14.293802986737926
+  },
+  "retrieve_u16": {
+   "users": 16,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 6029,
+   "failures": 0,
+   "requests_per_second": 298.6092528574723,
+   "p50_ms": 52.31116525828838,
+   "p95_ms": 77.48619951307774,
+   "p99_ms": 91.56540207564836,
+   "mean_ms": 53.39287886673176
+  },
+  "retrieve_u64": {
+   "users": 64,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 6069,
+   "failures": 0,
+   "requests_per_second": 301.37801108442994,
+   "p50_ms": 212.05033268779516,
+   "p95_ms": 267.6482416689396,
+   "p99_ms": 325.2248008921742,
+   "mean_ms": 214.0526221830304
+  },
+  "rerank10_u1": {
+   "users": 1,
+   "rerank": true,
+   "rerank_depth": 10,
+   "requests": 182,
+   "failures": 0,
+   "requests_per_second": 9.032209181815404,
+   "p50_ms": 112.20979178324342,
+   "p95_ms": 115.71274171583354,
+   "p99_ms": 119.64985385537148,
+   "mean_ms": 111.0768422719787
+  },
+  "rerank10_u4": {
+   "users": 4,
+   "rerank": true,
+   "rerank_depth": 10,
+   "requests": 237,
+   "failures": 0,
+   "requests_per_second": 11.82068758048499,
+   "p50_ms": 331.2490414828062,
+   "p95_ms": 406.17316663265206,
+   "p99_ms": 588.9834804460404,
+   "mean_ms": 340.8758222726704
+  }
+ }
+}
