@@ -2,6 +2,7 @@ import json
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -122,3 +123,26 @@ def test_tokenizers_library_matches_transformers_tokenization(artifacts):
     e = tok.encode(q, doc)
     r = ref(q, doc, truncation="longest_first", max_length=256)
     assert e.ids == r["input_ids"] and e.type_ids == r["token_type_ids"]
+
+
+def test_throttle_delta_reports_share_of_paused_periods():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("run_load_test", "scripts/run_load_test.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    before = {"nr_periods": 100, "nr_throttled": 10, "throttled_usec": 1_000_000, "usage_usec": 5_000_000}
+    after = {"nr_periods": 300, "nr_throttled": 110, "throttled_usec": 4_000_000, "usage_usec": 85_000_000}
+    d = mod.throttle_delta(before, after)
+    assert d["throttled_pct"] == 50.0 and d["throttled_ms"] == 3000.0 and d["cpu_seconds_used"] == 80.0
+    assert mod.throttle_delta(None, after) is None
+
+
+def test_spinning_can_be_switched_off(tmp_path, monkeypatch):
+    from finqa.serve.onnx_models import make_session
+
+    monkeypatch.setenv("FINQA_ORT_SPIN", "0")
+    model = Path("serving_artifacts/bi_encoder/model.onnx")
+    if not model.exists():
+        pytest.skip("needs a built serving_artifacts/")
+    assert make_session(model, 2).get_session_options().get_session_config_entry("session.intra_op.allow_spinning") == "0"

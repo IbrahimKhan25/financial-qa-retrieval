@@ -22,7 +22,14 @@ ENV PATH=/app/.venv/bin:$PATH \
     PYTHONPATH=/app/src \
     PYTHONUNBUFFERED=1 \
     FINQA_ARTIFACTS=/app/serving_artifacts \
-    FINQA_ORT_THREADS=4
+    FINQA_ORT_THREADS=4 \
+    FINQA_ORT_SPIN=0 \
+    OPENBLAS_NUM_THREADS=1 \
+    OMP_NUM_THREADS=1 \
+    TOKENIZERS_PARALLELISM=false
+# The last four keep the process inside its CPU limit. A container sees every core of the host, so by
+# default NumPy and the tokenizer start one thread per host core and idle ONNX Runtime threads busy-wait;
+# together they overshoot `--cpus` and the kernel pauses the container (see the README, load test).
 
 RUN useradd --create-home --uid 10001 app
 USER app

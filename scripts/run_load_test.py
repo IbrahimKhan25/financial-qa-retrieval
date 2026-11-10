@@ -49,6 +49,22 @@ def run_scenario(host: str, users: int, rerank: bool, depth: int, warmup: float,
             "p95_ms": float(np.percentile(ms, 95)), "p99_ms": float(np.percentile(ms, 99)), "mean_ms": float(ms.mean())}
 
 
+def ready(host: str) -> dict:
+    with urllib.request.urlopen(f"{host}/ready", timeout=5) as r:
+        return json.loads(r.read())
+
+
+def throttle_delta(before: dict | None, after: dict | None) -> dict | None:
+    """CPU throttling of the server's container during one scenario (None when it is not in a container)."""
+    if not before or not after:
+        return None
+    periods = after["nr_periods"] - before["nr_periods"]
+    throttled = after["nr_throttled"] - before["nr_throttled"]
+    return {"periods": periods, "throttled_periods": throttled, "throttled_pct": 100 * throttled / periods if periods else 0.0,
+            "throttled_ms": (after["throttled_usec"] - before["throttled_usec"]) / 1000,
+            "cpu_seconds_used": (after["usage_usec"] - before["usage_usec"]) / 1e6}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--host", default="http://localhost:8000")
@@ -57,8 +73,8 @@ def main():
     ap.add_argument("--duration", type=float, default=20)
     args = ap.parse_args()
 
-    with urllib.request.urlopen(f"{args.host}/ready", timeout=5) as r:
-        server = json.loads(r.read())
+    server = ready(args.host)
+    server.pop("cpu_throttle", None)
     d = fiqa.download()
     queries, qrels = fiqa.load_queries(d), fiqa.load_qrels(d, "dev")
     res = {"tag": args.tag, "server": server, "client_hardware": describe(),
@@ -71,10 +87,13 @@ def main():
         for name, users, rerank, depth in SCENARIOS:
             if rerank and not server.get("reranker"):
                 continue
+            before = ready(args.host).get("cpu_throttle")
             s = run_scenario(args.host, users, rerank, depth, args.warmup, args.duration, f.name)
+            s["cpu_throttle"] = th = throttle_delta(before, ready(args.host).get("cpu_throttle"))
             res["scenarios"][name] = s
             print(f"{name:13s} users {users:3d}  {s['requests_per_second']:7.1f} req/s  p50 {s['p50_ms']:7.1f}  "
-                  f"p95 {s['p95_ms']:7.1f}  p99 {s['p99_ms']:7.1f} ms  failures {s['failures']}")
+                  f"p95 {s['p95_ms']:7.1f}  p99 {s['p99_ms']:7.1f} ms  failures {s['failures']}"
+                  + (f"  throttled {th['throttled_pct']:.0f}% of periods" if th else ""))
     finally:
         os.unlink(f.name)
     out = Path(f"results/load_test_{args.tag}.json")

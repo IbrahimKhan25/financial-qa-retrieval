@@ -1,4 +1,5 @@
 """ONNX Runtime encoders for serving. No PyTorch or transformers: tokenization uses the `tokenizers` library."""
+import os
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +12,10 @@ def make_session(path: Path, threads: int) -> ort.InferenceSession:
     opts.intra_op_num_threads = threads
     opts.inter_op_num_threads = 1
     opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    if os.environ.get("FINQA_ORT_SPIN", "1") == "0":
+        # By default idle ORT threads busy-wait for the next job. Under a container CPU quota that
+        # wasted CPU counts against the quota and can get the whole container paused.
+        opts.add_session_config_entry("session.intra_op.allow_spinning", "0")
     return ort.InferenceSession(str(path), opts, providers=["CPUExecutionProvider"])
 
 

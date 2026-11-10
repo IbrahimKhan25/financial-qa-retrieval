@@ -55,11 +55,23 @@ class SearchResponse(BaseModel):
     timings_ms: dict[str, float]
 
 
+def _cpu_throttle() -> dict | None:
+    """How often the kernel paused this container for using more CPU than its limit (None outside a container)."""
+    try:
+        stat = dict(line.split() for line in Path("/sys/fs/cgroup/cpu.stat").read_text().splitlines())
+        return {k: int(stat[k]) for k in ("nr_periods", "nr_throttled", "throttled_usec", "usage_usec")}
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def create_app(artifacts_dir: str | None = None, threads: int | None = None) -> FastAPI:
     directory = artifacts_dir or os.environ.get("FINQA_ARTIFACTS", "serving_artifacts")
     n_threads = threads or int(os.environ.get("FINQA_ORT_THREADS", "4"))
     # Reported by /ready so a load test can record the machine the server really ran on.
-    hardware = {**describe(n_threads), "in_docker": os.path.exists("/.dockerenv"), "cpu_limit": _cpu_limit()}
+    hardware = {**describe(n_threads), "in_docker": os.path.exists("/.dockerenv"), "cpu_limit": _cpu_limit(),
+                "ort_spin": os.environ.get("FINQA_ORT_SPIN", "1") != "0",
+                "blas_threads": os.environ.get("OPENBLAS_NUM_THREADS", "default"),
+                "tokenizers_parallelism": os.environ.get("TOKENIZERS_PARALLELISM", "default")}
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -81,7 +93,7 @@ def create_app(artifacts_dir: str | None = None, threads: int | None = None) -> 
         m = r.art.manifest
         return {"status": "ready", "docs": len(r.art.doc_ids), "alpha": r.default_alpha,
                 "reranker": r.art.reranker is not None, "model": m.get("bi_encoder_sha256_10"), "built_at": m.get("built_at"),
-                "hardware": hardware}
+                "hardware": hardware, "cpu_throttle": _cpu_throttle()}
 
     @app.post("/search", response_model=SearchResponse)
     def search(req: SearchRequest):
