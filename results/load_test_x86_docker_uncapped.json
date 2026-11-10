@@ -1,0 +1,153 @@
+{
+ "tag": "x86_docker_uncapped",
+ "server": {
+  "status": "ready",
+  "docs": 57638,
+  "alpha": 0.8,
+  "reranker": true,
+  "model": "3538e24906",
+  "built_at": "2026-11-10T11:25:50+00:00",
+  "hardware": {
+   "cpu_model": "Intel(R) Core(TM) i7-9700F CPU @ 3.00GHz",
+   "logical_cores": 8,
+   "threads_used": 4,
+   "ram_gb": 7.7,
+   "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+   "machine": "x86_64",
+   "python": "3.11.18",
+   "in_docker": true,
+   "cpu_limit": 4.0,
+   "ort_spin": true,
+   "blas_threads": "8",
+   "tokenizers_parallelism": "true"
+  }
+ },
+ "client_hardware": {
+  "cpu_model": "Intel(R) Core(TM) i7-9700F CPU @ 3.00GHz",
+  "logical_cores": 8,
+  "threads_used": null,
+  "ram_gb": 15.9,
+  "platform": "Windows-10-10.0.26200-SP0",
+  "machine": "AMD64",
+  "python": "3.11.9"
+ },
+ "note": "closed loop (no think time), k=10, hybrid; the Locust client runs on the same machine as the server and competes for CPU; times are end to end over HTTP on localhost; one run per scenario",
+ "warmup_s": 5,
+ "duration_s": 20,
+ "scenarios": {
+  "retrieve_u1": {
+   "users": 1,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 257,
+   "failures": 0,
+   "requests_per_second": 12.274294773792068,
+   "p50_ms": 90.99359999981971,
+   "p95_ms": 113.36480000018128,
+   "p99_ms": 163.00903599994854,
+   "mean_ms": 81.28154357975595,
+   "cpu_throttle": {
+    "periods": 249,
+    "throttled_periods": 244,
+    "throttled_pct": 97.99196787148594,
+    "throttled_ms": 92336.545,
+    "cpu_seconds_used": 97.636313
+   }
+  },
+  "retrieve_u4": {
+   "users": 4,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 508,
+   "failures": 0,
+   "requests_per_second": 24.294467532372764,
+   "p50_ms": 180.4559499998959,
+   "p95_ms": 267.9418099999566,
+   "p99_ms": 292.44613500004107,
+   "mean_ms": 165.13427775589392,
+   "cpu_throttle": {
+    "periods": 251,
+    "throttled_periods": 246,
+    "throttled_pct": 98.00796812749005,
+    "throttled_ms": 93642.289,
+    "cpu_seconds_used": 98.619699
+   }
+  },
+  "retrieve_u16": {
+   "users": 16,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 632,
+   "failures": 0,
+   "requests_per_second": 30.204708768930857,
+   "p50_ms": 513.6169999998401,
+   "p95_ms": 863.3686949998258,
+   "p99_ms": 1006.8882799998253,
+   "mean_ms": 533.5991037974655,
+   "cpu_throttle": {
+    "periods": 251,
+    "throttled_periods": 246,
+    "throttled_pct": 98.00796812749005,
+    "throttled_ms": 94296.719,
+    "cpu_seconds_used": 98.577908
+   }
+  },
+  "retrieve_u64": {
+   "users": 64,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 670,
+   "failures": 0,
+   "requests_per_second": 32.04965862387624,
+   "p50_ms": 2110.1359500000854,
+   "p95_ms": 3046.848370000017,
+   "p99_ms": 4113.633940999998,
+   "mean_ms": 2115.032701194031,
+   "cpu_throttle": {
+    "periods": 252,
+    "throttled_periods": 247,
+    "throttled_pct": 98.01587301587301,
+    "throttled_ms": 95118.28,
+    "cpu_seconds_used": 99.221293
+   }
+  },
+  "rerank10_u1": {
+   "users": 1,
+   "rerank": true,
+   "rerank_depth": 10,
+   "requests": 66,
+   "failures": 0,
+   "requests_per_second": 3.176072375938373,
+   "p50_ms": 318.2431500001712,
+   "p95_ms": 355.4161499998827,
+   "p99_ms": 384.8860349999539,
+   "mean_ms": 316.5431196969648,
+   "cpu_throttle": {
+    "periods": 253,
+    "throttled_periods": 244,
+    "throttled_pct": 96.44268774703558,
+    "throttled_ms": 32270.871,
+    "cpu_seconds_used": 99.041986
+   }
+  },
+  "rerank10_u4": {
+   "users": 4,
+   "rerank": true,
+   "rerank_depth": 10,
+   "requests": 37,
+   "failures": 0,
+   "requests_per_second": 1.7690269320979106,
+   "p50_ms": 2286.335400000098,
+   "p95_ms": 3162.66805999976,
+   "p99_ms": 3209.0154999998595,
+   "mean_ms": 2265.2593081080777,
+   "cpu_throttle": {
+    "periods": 251,
+    "throttled_periods": 246,
+    "throttled_pct": 98.00796812749005,
+    "throttled_ms": 84159.051,
+    "cpu_seconds_used": 98.99692
+   }
+  }
+ }
+}

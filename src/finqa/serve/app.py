@@ -1,6 +1,7 @@
 """FastAPI service: hybrid retrieval (BM25 + fine-tuned bi-encoder), optional rerank, off by default."""
 import logging
 import os
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
@@ -72,6 +73,11 @@ def create_app(artifacts_dir: str | None = None, threads: int | None = None) -> 
                 "ort_spin": os.environ.get("FINQA_ORT_SPIN", "1") != "0",
                 "blas_threads": os.environ.get("OPENBLAS_NUM_THREADS", "default"),
                 "tokenizers_parallelism": os.environ.get("TOKENIZERS_PARALLELISM", "default")}
+    # Each search uses n_threads cores. With a CPU limit, more searches at once than limit / n_threads makes the
+    # kernel pause the container, so extra requests wait here instead. 0 means no limit.
+    max_concurrency = int(os.environ.get("FINQA_MAX_CONCURRENCY", "0"))
+    hardware["max_concurrent_searches"] = max_concurrency or None
+    gate = threading.BoundedSemaphore(max_concurrency) if max_concurrency > 0 else None
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -100,7 +106,11 @@ def create_app(artifacts_dir: str | None = None, threads: int | None = None) -> 
         r: Retriever = app.state.retriever
         if req.rerank and r.art.reranker is None:
             raise HTTPException(status_code=400, detail="this deployment has no reranker")
-        out = r.search(req.query, req.k, req.mode, req.alpha, req.rerank, req.rerank_depth)
+        if gate is None:
+            out = r.search(req.query, req.k, req.mode, req.alpha, req.rerank, req.rerank_depth)
+        else:
+            with gate:
+                out = r.search(req.query, req.k, req.mode, req.alpha, req.rerank, req.rerank_depth)
         return SearchResponse(query=req.query, mode=req.mode, k=req.k, **out)
 
     return app

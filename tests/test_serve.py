@@ -146,3 +146,34 @@ def test_spinning_can_be_switched_off(tmp_path, monkeypatch):
     if not model.exists():
         pytest.skip("needs a built serving_artifacts/")
     assert make_session(model, 2).get_session_options().get_session_config_entry("session.intra_op.allow_spinning") == "0"
+
+
+def test_concurrency_limit_never_lets_more_searches_run_at_once(artifacts, monkeypatch):
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from finqa.serve.pipeline import Retriever
+
+    monkeypatch.setenv("FINQA_MAX_CONCURRENCY", "2")
+    lock, running, peak = threading.Lock(), [0], [0]
+    real = Retriever.search
+
+    def slow(self, *a, **kw):
+        with lock:
+            running[0] += 1
+            peak[0] = max(peak[0], running[0])
+        time.sleep(0.02)
+        try:
+            return real(self, *a, **kw)
+        finally:
+            with lock:
+                running[0] -= 1
+
+    monkeypatch.setattr(Retriever, "search", slow)
+    with TestClient(create_app(str(artifacts), threads=1)) as c:
+        assert c.get("/ready").json()["hardware"]["max_concurrent_searches"] == 2
+        with ThreadPoolExecutor(8) as pool:
+            codes = list(pool.map(lambda i: c.post("/search", json={"query": f"dividend tax {i}"}).status_code, range(16)))
+    assert codes == [200] * 16
+    assert peak[0] == 2
