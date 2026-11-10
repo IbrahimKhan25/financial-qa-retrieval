@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 and 2 complete on the dev split (baselines and bi-encoder fine-tuning ablation).
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval).
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -93,7 +93,73 @@ Caveats on these results:
   defaults and were not tuned.
 - 19.15% of documents exceed MiniLM's 256-token limit and are truncated.
 
-Test split, reranking, hybrid and latency tables: *pending (later phases)*.
+### Hybrid retrieval (BM25 + dense), dev, 500 queries
+
+Two fusions of the BM25 and dense top-100 lists. **RRF** scores each document by the sum of 1 / (60 + rank)
+over both lists, using ranks only. **Weighted** min-max scales each list's scores to [0.001, 1] per query, then
+takes alpha x dense + (1 - alpha) x BM25 (alpha = 1 is dense alone, alpha = 0 is BM25 alone; tests check both
+extremes reproduce the single systems exactly).
+
+| System | NDCG@10 [95% CI] | Recall@100 [95% CI] | MRR@10 [95% CI] |
+|---|---|---|---|
+| BM25 alone | 0.231 [0.205, 0.259] | 0.497 [0.461, 0.533] | 0.287 [0.254, 0.323] |
+| Dense, zero-shot MiniLM | 0.388 [0.356, 0.421] | 0.720 [0.688, 0.753] | 0.453 [0.415, 0.492] |
+| Dense, fine-tuned (row D) | 0.428 [0.396, 0.460] | 0.744 [0.712, 0.774] | 0.501 [0.461, 0.539] |
+| Hybrid RRF: zero-shot + BM25 | 0.344 [0.313, 0.374] | 0.709 [0.676, 0.742] | 0.414 [0.377, 0.453] |
+| Hybrid RRF: row D + BM25 | 0.367 [0.337, 0.398] | 0.729 [0.697, 0.760] | 0.436 [0.398, 0.475] |
+| Hybrid weighted: zero-shot + BM25, alpha=0.7 | 0.411 [0.378, 0.443] | 0.720 [0.687, 0.752] | 0.481 [0.443, 0.521] |
+| Hybrid weighted: row D + BM25, alpha=0.8 | 0.444 [0.411, 0.477] | 0.742 [0.711, 0.773] | 0.515 [0.476, 0.553] |
+
+Paired differences on the same 500 queries:
+
+| Comparison (first minus second) | NDCG@10 [95% CI] | Recall@100 [95% CI] | Reading |
+|---|---|---|---|
+| rrf_D minus dense_D | -0.061 [-0.085, -0.036] | -0.015 [-0.034, +0.005] | worse; likely because equal-weight RRF lets the weaker BM25 pull the ranking down (not tested) |
+| weighted_D (alpha=0.8) minus dense_D | +0.016 [+0.008, +0.024] | -0.002 [-0.017, +0.013] | better NDCG@10; no Recall@100 gain |
+| rrf_D minus bm25 | +0.136 [+0.118, +0.155] | +0.232 [+0.202, +0.263] | better than BM25 alone |
+| weighted_D (alpha=0.8) minus bm25 | +0.213 [+0.184, +0.241] | +0.245 [+0.212, +0.279] | better than BM25 alone |
+| weighted_D (alpha=0.8) minus rrf_D | +0.076 [+0.055, +0.098] | +0.013 [+0.001, +0.026] | weighted fusion beats RRF here |
+| rrf_zs minus dense_zs | -0.045 [-0.067, -0.022] | -0.011 [-0.032, +0.009] | worse, same pattern as row D |
+| weighted_zs (alpha=0.7) minus dense_zs | +0.023 [+0.011, +0.034] | -0.000 [-0.018, +0.018] | better NDCG@10; no Recall@100 gain |
+
+Alpha sweep (NDCG@10), showing how sensitive the weighted fusion is:
+
+| alpha | NDCG@10, row D + BM25 | NDCG@10, zero-shot + BM25 |
+|---|---|---|
+| 0.0 | 0.232 | 0.232 |
+| 0.1 | 0.253 | 0.252 |
+| 0.2 | 0.279 | 0.274 |
+| 0.3 | 0.312 | 0.304 |
+| 0.4 | 0.364 | 0.342 |
+| 0.5 | 0.416 | 0.386 |
+| 0.6 | 0.437 | 0.405 |
+| 0.7 | 0.443 | 0.411 |
+| 0.8 | 0.444 | 0.405 |
+| 0.9 | 0.438 | 0.399 |
+| 1.0 | 0.428 | 0.388 |
+
+What the hybrid experiment shows:
+
+- **Weighted fusion helps a little**: row D + BM25 reaches 0.444 NDCG@10,
+  +0.016 [+0.008, +0.024] over row D alone. The alpha curve has a plateau from 0.6 to 0.9,
+  so the result is not a sharp tuning artifact.
+- **Standard equal-weight RRF made things worse** than dense alone (-0.061 [-0.085, -0.036]). A likely reason, not tested: BM25 is far
+  weaker than the fine-tuned model (0.231 vs 0.428), and RRF gives both lists equal say. The k=60 default was
+  not tuned, and a weighted RRF was not tried.
+- **The hybrid did not raise Recall@100** (0.742 vs 0.744 for dense alone;
+  the difference is not significant). The gain is in ordering the top of the list, not in finding more answers
+  within 100. That matters for reranking, whose ceiling is recall at the rerank depth; Phase 4 will compare
+  both candidate generators at depths 10, 20, 50 and 100.
+- Fine-tuning shrinks what BM25 adds: the hybrid gain is +0.023 [+0.011, +0.034] on the zero-shot
+  model and +0.016 [+0.008, +0.024] on row D.
+
+Caveats: alpha is chosen on dev (one parameter, so the optimism is small, but the selected score is not a clean
+estimate), and row D was itself chosen on dev; one training seed; the hybrid run used the checkpoint downloaded
+from Colab (checkpoints are git-ignored) and ran on mps (Apple M2); re-evaluating row D there
+gave NDCG@10 0.4281, against 0.4284 on the T4, a negligible device difference.
+No test-set number has been computed.
+
+Test split, reranking and latency tables: *pending (later phases)*.
 
 ## Reproduce
 
@@ -106,3 +172,4 @@ uv run pytest -q
 
 Phase 2 training runs on a GPU: open `notebooks/colab_train.ipynb` in Colab (T4) and run the cells in order;
 it mines negatives and trains rows B, C, C2 and D, writing `results/train_*.json`.
+Phase 3 (`uv run python scripts/run_hybrid.py`) needs the row D checkpoint from that run in `checkpoints/bi_encoder_D_mined`.
