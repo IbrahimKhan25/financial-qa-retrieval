@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) in progress: off-the-shelf reranker measured, fine-tuned run 1 was worse and diagnosed, run 2 pending; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F (Docker timing pending).
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F (Docker timing pending).
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -217,40 +217,46 @@ that ONNX and int8 must beat.
 Caveats: one off-the-shelf model, one seed for everything upstream; the hybrid's alpha and row D were chosen on dev;
 no test-set number has been computed. Tuning a blend of reranker and first-stage scores was not tried.
 
-### Fine-tuned reranker, run 1 (dev): it got worse
+### Fine-tuned reranker (dev): two runs, neither beats the first stage
 
-The off-the-shelf reranker hurt a strong first stage, so I fine-tuned it on FiQA training questions: listwise group softmax over
-1 correct post plus 7 hard negatives per question (mined with BM25 and with the fine-tuned bi-encoder, ranks 0 to 100, dev and test answers
-excluded), 8 questions per step, learning rate 2e-5, 2 epochs, seed 42, Tesla T4 with fp16 (about 7.6 minutes per epoch).
-Each epoch reranks the dev candidates; epoch 0 below is the untouched model and reproduces the local 0.365 exactly.
+The off-the-shelf reranker hurt a strong first stage, so I fine-tuned it on FiQA training questions: listwise group softmax over 1 correct post plus 7
+negatives per question (hard negatives mined with BM25 and with the fine-tuned bi-encoder, ranks 0 to 100, dev and test answers excluded), 8 questions
+per step, learning rate 2e-5, 2 epochs, seed 42, Tesla T4 with fp16 (about 7.6 minutes per epoch). **Run 1** used hard negatives only. **Run 2** is the
+same recipe with 3 of the 7 negatives replaced by random documents. Each epoch reranks the dev candidates; epoch 0 is the untouched model and reproduced
+0.365 locally in both runs.
 
 | System (dev, rerank top 100 of the hybrid candidates) | NDCG@10 [95% CI] | MRR@10 | Recall@100 |
 |---|---|---|---|
 | First stage only (hybrid, no reranking) | 0.444 [0.411, 0.477] | 0.515 | 0.742 |
 | Off-the-shelf reranker (epoch 0) | 0.365 [0.334, 0.396] | 0.436 | 0.742 |
-| Fine-tuned, run 1, epoch 1 | 0.289 | 0.351 | 0.742 |
-| Fine-tuned, run 1, epoch 2 (best epoch on dev) | 0.296 [0.265, 0.327] | 0.356 | 0.742 |
+| Run 1 (hard negatives only), epoch 1 | 0.289 | 0.351 | 0.742 |
+| Run 1 (hard negatives only), epoch 2, best | 0.296 [0.265, 0.327] | 0.356 | 0.742 |
+| Run 2 (3 of 7 negatives random), epoch 1 | 0.342 | 0.409 | 0.742 |
+| Run 2 (3 of 7 negatives random), epoch 2, best | 0.363 [0.330, 0.395] | 0.431 | 0.742 |
 
-Fine-tuned minus off-the-shelf: NDCG@10 -0.069 [-0.091, -0.049]; fine-tuned minus the first stage alone:
--0.148 [-0.174, -0.122] (paired bootstrap, 500 queries). The training loss fell only from 1.88 to 1.50
-(a random guess among 8 candidates scores 2.08).
+Paired differences (NDCG@10, 500 queries): run 1 minus off-the-shelf -0.069 [-0.091, -0.049]; run 2 minus off-the-shelf
+-0.003 [-0.023, +0.018]; run 2 minus the first stage alone -0.081 [-0.105, -0.058].
 
-**Is it a bug?** A diagnostic on training groups (`scripts/diagnose_reranker.py`, results in `results/reranker_diagnostic.json`) points away from a plain coding bug: the model did learn its task, and
-at the same time it lost something more basic.
+**Run 1 got worse, and it was not a coding bug.** A diagnostic on training groups (`scripts/diagnose_reranker.py`, results in `results/reranker_diagnostic.json`):
 
-| Training groups of 8 (300 train queries) | Off-the-shelf: positive ranked first | Fine-tuned: positive ranked first |
-|---|---|---|
-| Hard negatives (the training distribution) | 36.7% (MRR 0.52) | 52.7% (MRR 0.68) |
-| Random documents (easy) | 93.7% (MRR 0.96) | 16.3% (MRR 0.30) |
+| Training groups of 8 (300 train queries): correct post ranked first | Off-the-shelf | Run 1 | Run 2 |
+|---|---|---|---|
+| Hard negatives (the training distribution) | 36.7% | 52.7% | 50.0% |
+| Random documents (easy) | 93.7% | 16.3% | 88.0% |
 
-Fine-tuning improved the hard cases it practised on, but the model collapsed on easy ones (from 94% to 16% against
-a chance level of 12.5%). A likely reason, which run 2 tests, is that it only ever saw hard negatives, with no easy ones to anchor its basic sense of relevance. A second suspected contributor (not tested): 53% of the
-BM25 negatives and 60% of the dense negatives are answers to *other* training questions, so many are probably unlabeled good answers (false negatives).
-Learning rate and epoch count were not varied.
+Run 1 improved the hard cases it practised but collapsed on easy ones (from 94% to 16%, chance
+12.5%): it forgot basic relevance. Run 2, chosen from this training-set diagnostic and not from dev scores, kept the easy-case ability
+(88%) and also improved on hard cases, which supports the explanation that hard-only negatives caused the collapse.
 
-**Run 2 (configured, not yet run):** the same recipe with 3 of the 7 negatives per group replaced by random documents (`configs/cross_encoder_ft_mixed.yaml`),
-chosen from this training-set diagnostic, not by looking at dev scores. It is one planned retry; if it also fails to beat the first stage, the conclusion is that
-this reranker does not help on this data and the serving default will be retrieval only.
+**But run 2 did not make the reranker better.** Its dev NDCG@10 (0.363) is statistically the same as the off-the-shelf reranker's (0.365), and both are
+significantly below the first stage alone (0.444). The improvement on hard training groups did not transfer to dev. Possible reasons, all untested: label
+sparsity (many top-ranked "negatives" are unlabeled good answers: 53% of the BM25 and 60% of the dense negatives are answers to other training questions), too little
+training signal, or overfitting. Dev NDCG@10 was still rising from epoch 1 (0.342) to epoch 2 (0.363) and the loss was still falling, so run 2 may be under-trained; I did not
+continue, because this was one planned retry and further tuning against dev would make the dev number less honest.
+
+**Decision:** a reranker, off-the-shelf or fine-tuned as above, does not improve on the hybrid first stage on this data, so the service will serve retrieval only
+(hybrid BM25 plus fine-tuned bi-encoder) with reranking available as an off-by-default option. Caveats: one seed per run, two runs, best epoch chosen on dev,
+no test number computed.
 
 ### Inference optimization: ONNX export, graph fusion and int8 quantization (dev)
 
@@ -358,7 +364,7 @@ my first guess, oneDNN, was tested and was wrong). Quality numbers were unaffect
 about 5 to 15% of the earlier ones, the code now raises on NaN, and a regression test pins correct scores. (2) The first
 Phase 5 conclusion that ONNX was not faster was caused by the missing fusion step, described above.
 
-Fine-tuned reranker run 2, Docker latency, serving and the test split: *pending (later phases)*.
+Docker latency, serving and the test split: *pending (later phases)*.
 
 ## Reproduce
 

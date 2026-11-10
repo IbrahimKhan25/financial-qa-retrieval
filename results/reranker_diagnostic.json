@@ -10,9 +10,13 @@
     "positive_first": 0.36666666666666664,
     "mean_reciprocal_rank": 0.5201746031746032
    },
-   "fine_tuned": {
+   "fine_tuned_run1": {
     "positive_first": 0.5266666666666666,
     "mean_reciprocal_rank": 0.676218253968254
+   },
+   "fine_tuned_run2": {
+    "positive_first": 0.5,
+    "mean_reciprocal_rank": 0.6601031746031746
    }
   },
   "random": {
@@ -20,9 +24,13 @@
     "positive_first": 0.9366666666666666,
     "mean_reciprocal_rank": 0.9621666666666666
    },
-   "fine_tuned": {
+   "fine_tuned_run1": {
     "positive_first": 0.16333333333333333,
     "mean_reciprocal_rank": 0.30075793650793653
+   },
+   "fine_tuned_run2": {
+    "positive_first": 0.88,
+    "mean_reciprocal_rank": 0.9363888888888887
    }
   }
  },
