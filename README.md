@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval).
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) in progress: off-the-shelf reranker measured, fine-tuned reranker pending.
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -159,7 +159,65 @@ from Colab (checkpoints are git-ignored) and ran on mps (Apple M2); re-evaluatin
 gave NDCG@10 0.4281, against 0.4284 on the T4, a negligible device difference.
 No test-set number has been computed.
 
-Test split, reranking and latency tables: *pending (later phases)*.
+### Cross-encoder reranking (dev, 500 queries): off-the-shelf reranker
+
+The off-the-shelf `cross-encoder/ms-marco-MiniLM-L-6-v2` rescored the first stage's top-100 candidates; the
+rerank depth is how many of the top candidates it reorders (the rest keep their order, so Recall@100 never
+changes). Question and post are encoded together, post trimmed to 256 tokens. A fine-tuned reranker is
+**pending** (it needs a GPU run on Colab).
+
+| First stage | Reranking | NDCG@10 [95% CI] | MRR@10 | NDCG@10 change vs no reranking [95% CI] |
+|---|---|---|---|---|
+| Dense, row D | no reranking | 0.428 [0.396, 0.460] | 0.501 | - |
+| Dense, row D | rerank top 10 | 0.423 [0.391, 0.454] | 0.490 | -0.005 [-0.019, +0.010] |
+| Dense, row D | rerank top 20 | 0.409 [0.378, 0.440] | 0.475 | -0.019 [-0.039, +0.001] |
+| Dense, row D | rerank top 50 | 0.397 [0.365, 0.427] | 0.460 | -0.032 [-0.054, -0.008] |
+| Dense, row D | rerank top 100 | 0.379 [0.347, 0.410] | 0.447 | -0.049 [-0.073, -0.025] |
+| Hybrid, row D + BM25 (alpha 0.8) | no reranking | 0.444 [0.411, 0.477] | 0.515 | - |
+| Hybrid, row D + BM25 (alpha 0.8) | rerank top 10 | 0.423 [0.392, 0.455] | 0.484 | -0.020 [-0.034, -0.007] |
+| Hybrid, row D + BM25 (alpha 0.8) | rerank top 20 | 0.412 [0.380, 0.443] | 0.475 | -0.032 [-0.051, -0.012] |
+| Hybrid, row D + BM25 (alpha 0.8) | rerank top 50 | 0.390 [0.359, 0.420] | 0.452 | -0.054 [-0.076, -0.032] |
+| Hybrid, row D + BM25 (alpha 0.8) | rerank top 100 | 0.365 [0.334, 0.396] | 0.436 | -0.079 [-0.101, -0.055] |
+
+**Result: the off-the-shelf reranker made both strong first stages worse, and the more candidates it reordered,
+the worse it got.** Reranking the dense top 100 lost 0.049 NDCG@10
+(significant); the hybrid lost more, starting from a higher score. At depth 10 the dense loss is not significant.
+
+**Control experiment.** To rule out a bug, I ran the same reranker on BM25's candidates, where published BEIR
+results show rerankers of this family help on FiQA (I did not re-verify the exact published figure here):
+
+| First stage | Reranking | NDCG@10 [95% CI] | MRR@10 | NDCG@10 change vs no reranking [95% CI] |
+|---|---|---|---|---|
+| BM25 (validation run) | no reranking | 0.231 [0.205, 0.259] | 0.287 | - |
+| BM25 (validation run) | rerank top 10 | 0.271 [0.240, 0.302] | 0.359 | +0.040 [+0.027, +0.053] |
+| BM25 (validation run) | rerank top 20 | 0.294 [0.263, 0.325] | 0.377 | +0.063 [+0.046, +0.080] |
+| BM25 (validation run) | rerank top 50 | 0.319 [0.288, 0.350] | 0.399 | +0.088 [+0.068, +0.108] |
+| BM25 (validation run) | rerank top 100 | 0.330 [0.298, 0.360] | 0.411 | +0.098 [+0.078, +0.119] |
+
+It helps strongly and the gain grows with depth, so the scoring pipeline is sound. The likely reason (not tested) is
+that this reranker was trained on MS MARCO web-search passages, not financial opinion posts, so it is a weaker
+judge of FiQA relevance than a first stage fine-tuned on FiQA: it adds value on top of a weak first stage
+(BM25, 0.231) and subtracts from a strong one (0.428 to 0.444).
+
+CPU latency of the reranker alone (per query, one batch of `depth` pairs; includes tokenization and the forward pass):
+
+| Rerank depth | p50 per query | p95 per query |
+|---|---|---|
+| 10 | 143 ms | 172 ms |
+| 20 | 273 ms | 282 ms |
+| 50 | 613 ms | 661 ms |
+| 100 | 1278 ms | 1358 ms |
+
+Hardware for these latency numbers: **Apple M2 (arm64), 4 threads**, PyTorch 2.15.0 fp32, 100 queries after 3
+warm-up queries, outside Docker. Cost grows roughly linearly with depth (12.8 ms per pair at depth 100). The quality
+scores above were computed on the Apple GPU (MPS), the latency on CPU. This M2 is not the x86 cloud CPU we would
+deploy on, and the Docker benchmark is still to do (Phases 5 and 6); these numbers are the unoptimized baseline
+that ONNX and int8 must beat.
+
+Caveats: one off-the-shelf model, one seed for everything upstream; the hybrid's alpha and row D were chosen on dev;
+no test-set number has been computed. Tuning a blend of reranker and first-stage scores was not tried.
+
+Fine-tuned reranker, ONNX/int8, Docker latency, serving and the test split: *pending (later phases)*.
 
 ## Reproduce
 

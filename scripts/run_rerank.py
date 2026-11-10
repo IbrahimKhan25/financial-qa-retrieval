@@ -63,6 +63,8 @@ def main():
     ap.add_argument("--finetuned", help="fine-tuned CrossEncoder dir (optional)")
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--latency-queries", type=int, default=100)
+    ap.add_argument("--no-latency", action="store_true", help="skip the CPU latency benchmark")
+    ap.add_argument("--out", default="results/rerank_dev.json")
     ap.add_argument("--split", default="dev", choices=["dev"])  # test is deliberately not allowed
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
@@ -116,15 +118,16 @@ def main():
             res["paired"][f"{stage}: finetuned depth 100 minus offshelf depth 100"] = pair((stage, "finetuned", 100), (stage, "offshelf", 100))
 
     # CPU latency (architecture is identical for both cross-encoders; measure the fine-tuned one if present)
-    spec = ce_specs.get("finetuned", ce_specs["offshelf"])
-    stage0 = next(iter(cand_sets))
-    cpu_model = CrossEncoder(spec).to("cpu")
-    res["latency_cpu"] = {"model": spec, "per_depth": latency(cpu_model, queries, text, cand_sets[stage0], qids,
-                                                                args.threads, args.latency_queries),
-                          "precision": "fp32 PyTorch", "includes": "tokenization + forward, one query, one batch",
-                          "hardware": {**describe(num_threads=args.threads), "torch": torch.__version__}}
+    if not args.no_latency:
+        spec = ce_specs.get("finetuned", ce_specs["offshelf"])
+        stage0 = next(iter(cand_sets))
+        cpu_model = CrossEncoder(spec).to("cpu")
+        res["latency_cpu"] = {"model": spec, "per_depth": latency(cpu_model, queries, text, cand_sets[stage0], qids,
+                                                                    args.threads, args.latency_queries),
+                              "precision": "fp32 PyTorch", "includes": "tokenization + forward, one query, one batch",
+                              "hardware": {**describe(num_threads=args.threads), "torch": torch.__version__}}
     res["hardware"] = {**describe(), "scoring_device": device, "torch": torch.__version__}
-    out = Path("results/rerank_dev.json")
+    out = Path(args.out)
     out.write_text(json.dumps(res, indent=1))
 
     print(f"\nwrote {out}\n")
@@ -136,8 +139,9 @@ def main():
                 m = res["first_stages"][stage][ce_name][depth]["metrics"]
                 print(f"[{stage}] {ce_name:9s} depth {depth:3d}: ndcg {m['ndcg@10']['mean']:.4f} [{m['ndcg@10']['ci_low']:.4f},"
                       f"{m['ndcg@10']['ci_high']:.4f}] mrr {m['mrr@10']['mean']:.4f} recall@100 {m['recall@100']['mean']:.4f}")
-    print("\nCPU latency per query (ms):", {k: (round(v["p50_ms"]), round(v["p95_ms"])) for k, v in res["latency_cpu"]["per_depth"].items()},
-          "threads", args.threads, res["latency_cpu"]["hardware"]["cpu_model"])
+    if "latency_cpu" in res:
+        print("\nCPU latency per query (ms):", {k: (round(v["p50_ms"]), round(v["p95_ms"])) for k, v in res["latency_cpu"]["per_depth"].items()},
+              "threads", args.threads, res["latency_cpu"]["hardware"]["cpu_model"])
 
 
 if __name__ == "__main__":
