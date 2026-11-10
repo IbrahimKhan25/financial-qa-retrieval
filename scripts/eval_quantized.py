@@ -39,11 +39,14 @@ def main():
     ap.add_argument("--candidates", default="data/candidates/dev_dense_D.json")
     ap.add_argument("--torch-ce-scores", default="data/cache/ce_scores_cross-encoder_ms-marco-MiniLM-L-6-v2.json")
     ap.add_argument("--threads", type=int, default=4)
-    ap.add_argument("--out", default="results/onnx_quality_dev.json")
+    ap.add_argument("--variant", choices=["naive", "fused"], default="naive")
+    ap.add_argument("--out", default=None)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
     set_seed(args.seed)
     od = Path(args.onnx_dir)
+    pre = "fused_" if args.variant == "fused" else ""
+    out_path = args.out or ("results/onnx_quality_fused_dev.json" if pre else "results/onnx_quality_dev.json")
 
     d = fiqa.download()
     corpus, queries = fiqa.load_corpus(d), fiqa.load_queries(d)
@@ -58,7 +61,7 @@ def main():
 
     bi_dir = od / "bi_encoder_D"
     torch_bi = BiEncoder(args.bi_checkpoint).to("cpu")
-    bi = {k: OnnxBiEncoder(bi_dir / f"model_{k}.onnx", bi_dir, threads=args.threads) for k in ("fp32", "int8")}
+    bi = {k: OnnxBiEncoder(bi_dir / f"model_{pre}{k}.onnx", bi_dir, threads=args.threads) for k in ("fp32", "int8")}
 
     # ---- A. numeric parity of the bi-encoder
     sample = q_texts[:32] + texts[:32]
@@ -74,7 +77,7 @@ def main():
     key = f"finetuned-{hashlib.sha256((Path(args.bi_checkpoint) / 'model.safetensors').read_bytes()).hexdigest()[:10]}"
     d_fp32 = encode_cached(torch_bi, texts, key)  # cached from the hybrid run
     t0 = time.time()
-    d_int8 = encode_cached(bi["int8"], texts, f"onnxint8-{key}")
+    d_int8 = encode_cached(bi["int8"], texts, f"onnxint8{'fused' if pre else ''}-{key}")
     print(f"int8 document encoding took {time.time() - t0:.0f}s (0 if cached)", flush=True)
     q_emb = {"pytorch_fp32": torch_bi.encode(q_texts), "onnx_fp32": bi["fp32"].encode(q_texts),
              "onnx_int8": bi["int8"].encode(q_texts)}
@@ -100,7 +103,7 @@ def main():
     # ---- C. reranker parity and rerank quality
     ce_dir = od / f"cross_encoder_{args.ce_name}"
     torch_ce = CrossEncoder(args.ce).to("cpu")
-    ce = {k: OnnxCrossEncoder(ce_dir / f"model_{k}.onnx", ce_dir, threads=args.threads) for k in ("fp32", "int8")}
+    ce = {k: OnnxCrossEncoder(ce_dir / f"model_{pre}{k}.onnx", ce_dir, threads=args.threads) for k in ("fp32", "int8")}
     pairs = [(queries[q], text[x]) for q in qids[:6] for x in cands[q][:25]]
     qs, ds = [p[0] for p in pairs], [p[1] for p in pairs]
     s_t, s_f, s_i = torch_ce.score(qs, ds), ce["fp32"].score(qs, ds), ce["int8"].score(qs, ds)
@@ -110,7 +113,7 @@ def main():
     print("cross-encoder parity:", res["parity_cross_encoder"], flush=True)
 
     torch_scores = json.loads(Path(args.torch_ce_scores).read_text())  # fp32 scores from the Phase 4 run
-    cache_path = Path(f"data/cache/ce_scores_onnxint8_{args.ce_name}.json")
+    cache_path = Path(f"data/cache/ce_scores_onnxint8{'_fused' if pre else ''}_{args.ce_name}.json")
     int8_scores = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     need = sorted({(q, x) for q in qids for x in cands[q] if f"{q}|{x}" not in int8_scores})
     if need:
@@ -133,8 +136,9 @@ def main():
         a, b = (res["rerank"][f"depth {depth}"][k]["metrics"]["ndcg@10"]["mean"] for k in ("pytorch fp32 (reference)", "onnx int8"))
         print(f"rerank depth {depth}: ndcg fp32 {a:.4f} int8 {b:.4f}", flush=True)
 
-    Path(args.out).write_text(json.dumps(res, indent=1))
-    print(f"wrote {args.out}")
+    res["variant"] = args.variant
+    Path(out_path).write_text(json.dumps(res, indent=1))
+    print(f"wrote {out_path}")
 
 
 if __name__ == "__main__":

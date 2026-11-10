@@ -67,3 +67,41 @@ def test_cross_encoder_fp32_onnx_matches_pytorch(ce):
     ref = model.score(qs, ds)
     got = OnnxCrossEncoder(d / "fp32.onnx", d).score(qs, ds)
     assert np.abs(ref - got).max() < 1e-3
+
+
+@pytest.fixture(scope="module")
+def fused_bi(tmp_path_factory):
+    from finqa.optimize.fuse import fuse_bert
+
+    d = tmp_path_factory.mktemp("fused_bi")
+    model = BiEncoder(NAME, attn_implementation="eager")
+    model.tokenizer.save_pretrained(d)
+    export_bi_encoder(model, d / "eager.onnx")
+    cfg = model.backbone.config
+    stats = fuse_bert(d / "eager.onnx", d / "fused_fp32.onnx", cfg.num_attention_heads, cfg.hidden_size,
+                      cfg.num_hidden_layers)
+    quantize_int8(d / "fused_fp32.onnx", d / "fused_int8.onnx")
+    return BiEncoder(NAME).to("cpu"), d, stats, cfg.num_hidden_layers
+
+
+def test_fusion_fuses_attention_in_every_layer(fused_bi):
+    _, _, stats, layers = fused_bi
+    assert stats["Attention"] == layers
+
+
+def test_fused_fp32_matches_pytorch_and_fused_int8_is_sane(fused_bi):
+    model, d, _, _ = fused_bi
+    ref = model.encode(TEXTS)
+    f32 = OnnxBiEncoder(d / "fused_fp32.onnx", d).encode(TEXTS)
+    i8 = OnnxBiEncoder(d / "fused_int8.onnx", d).encode(TEXTS)
+    assert np.abs(ref - f32).max() < 1e-4
+    assert (f32 * i8).sum(1).min() > 0.85
+
+
+def test_fusion_raises_when_attention_is_not_fused(bi, tmp_path):
+    # The default (sdpa) export has an attention pattern the fuser does not match; that must be an error.
+    from finqa.optimize.fuse import fuse_bert
+
+    _, d = bi
+    with pytest.raises(RuntimeError, match="attention was not fused"):
+        fuse_bert(d / "fp32.onnx", tmp_path / "x.onnx", 12, 384, 6)

@@ -19,10 +19,11 @@ def pick_device() -> str:
 
 
 class BiEncoder(nn.Module):
-    def __init__(self, name_or_path: str, max_length: int = 256):
+    def __init__(self, name_or_path: str, max_length: int = 256, attn_implementation: str | None = None):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(name_or_path)
-        self.backbone = AutoModel.from_pretrained(name_or_path)
+        kw = {"attn_implementation": attn_implementation} if attn_implementation else {}
+        self.backbone = AutoModel.from_pretrained(name_or_path, **kw)
         self.max_length = max_length
 
     def forward(self, input_ids, attention_mask, **_):

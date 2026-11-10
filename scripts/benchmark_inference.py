@@ -19,6 +19,8 @@ from finqa.utils.hardware import describe
 from finqa.utils.seed import set_seed
 
 DEPTHS = (10, 20, 50, 100)
+ONNX_VARIANTS = [("onnx_fp32", "model_fp32.onnx"), ("onnx_int8", "model_int8.onnx"),
+                 ("onnx_fused_fp32", "model_fused_fp32.onnx"), ("onnx_fused_int8", "model_fused_int8.onnx")]
 
 
 def stats(ms: list[float]) -> dict:
@@ -71,11 +73,10 @@ def main():
     # ---- bi-encoder: single-query latency, and document throughput
     bi_dir = od / "bi_encoder_D"
     torch_bi = BiEncoder(args.bi_checkpoint).to("cpu")
-    backends = {"pytorch_fp32": (torch_bi, torch_mb(torch_bi)),
-                "onnx_fp32": (OnnxBiEncoder(bi_dir / "model_fp32.onnx", bi_dir, threads=args.threads),
-                              round((bi_dir / "model_fp32.onnx").stat().st_size / 1e6, 1)),
-                "onnx_int8": (OnnxBiEncoder(bi_dir / "model_int8.onnx", bi_dir, threads=args.threads),
-                              round((bi_dir / "model_int8.onnx").stat().st_size / 1e6, 1))}
+    backends = {"pytorch_fp32": (torch_bi, torch_mb(torch_bi))}
+    for name, fname in ONNX_VARIANTS:
+        backends[name] = (OnnxBiEncoder(bi_dir / fname, bi_dir, threads=args.threads),
+                          round((bi_dir / fname).stat().st_size / 1e6, 1))
     docs = [text[i] for i in list(corpus)[:512]]
     for name, (enc, mb) in backends.items():
         lat = stats(timed([(lambda t=t, enc=enc: enc.encode([t], batch_size=1)) for t in q_texts]))
@@ -83,16 +84,15 @@ def main():
         enc.encode(docs, batch_size=32)
         thr = len(docs) / (time.perf_counter() - t0)
         res["bi_encoder"][name] = {"single_query_latency": lat, "docs_per_second_batch32": thr, "model_mb": mb}
-        print(f"bi-encoder {name:13s} p50 {lat['p50_ms']:.1f} ms p95 {lat['p95_ms']:.1f} ms | {thr:.0f} docs/s | {mb} MB", flush=True)
+        print(f"bi-encoder {name:16s} p50 {lat['p50_ms']:.1f} ms p95 {lat['p95_ms']:.1f} ms | {thr:.0f} docs/s | {mb} MB", flush=True)
 
     # ---- cross-encoder: per-query latency by rerank depth, and pair throughput
     ce_dir = od / f"cross_encoder_{args.ce_name}"
     torch_ce = CrossEncoder(args.ce).to("cpu")
-    ce_backends = {"pytorch_fp32": (torch_ce, torch_mb(torch_ce)),
-                   "onnx_fp32": (OnnxCrossEncoder(ce_dir / "model_fp32.onnx", ce_dir, threads=args.threads),
-                                 round((ce_dir / "model_fp32.onnx").stat().st_size / 1e6, 1)),
-                   "onnx_int8": (OnnxCrossEncoder(ce_dir / "model_int8.onnx", ce_dir, threads=args.threads),
-                                 round((ce_dir / "model_int8.onnx").stat().st_size / 1e6, 1))}
+    ce_backends = {"pytorch_fp32": (torch_ce, torch_mb(torch_ce))}
+    for name, fname in ONNX_VARIANTS:
+        ce_backends[name] = (OnnxCrossEncoder(ce_dir / fname, ce_dir, threads=args.threads),
+                             round((ce_dir / fname).stat().st_size / 1e6, 1))
     pairs = [(queries[q], text[x]) for q in qids[:12] for x in cands[q]][:1024]
     for name, (ce, mb) in ce_backends.items():
         by_depth = {}
@@ -104,7 +104,7 @@ def main():
         ce.score([p[0] for p in pairs], [p[1] for p in pairs], batch_size=32)
         thr = len(pairs) / (time.perf_counter() - t0)
         res["cross_encoder"][name] = {"latency_by_depth": by_depth, "pairs_per_second_batch32": thr, "model_mb": mb}
-        print(f"cross-encoder {name:13s} " + " ".join(f"d{k}:{v['p50_ms']:.0f}/{v['p95_ms']:.0f}ms" for k, v in by_depth.items())
+        print(f"cross-encoder {name:16s} " + " ".join(f"d{k}:{v['p50_ms']:.0f}/{v['p95_ms']:.0f}ms" for k, v in by_depth.items())
               + f" | {thr:.0f} pairs/s | {mb} MB", flush=True)
 
     Path(args.out).write_text(json.dumps(res, indent=1))

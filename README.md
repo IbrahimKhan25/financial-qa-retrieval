@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) in progress: off-the-shelf reranker measured, fine-tuned reranker pending; Phase 5 (ONNX/int8) measured on an Apple M2, x86 timing pending.
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) in progress: off-the-shelf reranker measured, fine-tuned reranker pending; Phase 5 (ONNX, fusion, int8) measured on an Apple M2, fused x86 timing pending.
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -217,70 +217,91 @@ that ONNX and int8 must beat.
 Caveats: one off-the-shelf model, one seed for everything upstream; the hybrid's alpha and row D were chosen on dev;
 no test-set number has been computed. Tuning a blend of reranker and first-stage scores was not tried.
 
-### Inference optimization: ONNX export and int8 quantization (dev)
+### Inference optimization: ONNX export, graph fusion and int8 quantization (dev)
 
-Both neural pieces were exported to ONNX (opset 17, dynamic batch and length) and quantized with dynamic int8
-(weights stored as 8-bit integers, activation scales computed at run time, no calibration data). The
-reference is PyTorch fp32.
+Both neural pieces were exported to ONNX (opset 17, dynamic batch and length) in two ways. The **default export** uses
+PyTorch's built-in attention operator. The **fused export** re-exports with explicit attention and runs ONNX Runtime's
+BERT optimizer, which fuses attention, embedding plus LayerNorm, GELU and residual LayerNorm into optimized kernels
+(the pipeline raises an error if attention was not fused in every layer). Each is also quantized with dynamic int8
+(weights stored as 8-bit integers, activation scales computed at run time, no calibration data). Reference: PyTorch fp32.
 
-**Is the export faithful?** The ONNX fp32 bi-encoder matches PyTorch to 2.4e-07 (max absolute difference
-in the embedding) and the ONNX fp32 reranker to 1.2e-05. Retrieval quality with ONNX fp32 is identical to PyTorch.
+**Is the export faithful?** The default-export fp32 bi-encoder matches PyTorch to 2.4e-07 (max absolute
+difference in the embedding) and the reranker to 1.2e-05; retrieval quality with ONNX fp32 is identical to PyTorch.
+The fused fp32 graphs are tested to match PyTorch within 1e-4.
 
-**Quality cost of int8 (dev, 500 queries).** Int8 query embeddings have a mean cosine of 0.956 (min 0.924)
-with the fp32 ones.
+**Quality cost of int8 (dev, 500 queries).**
 
-| Bi-encoder setup | NDCG@10 [95% CI] | Recall@100 | MRR@10 | NDCG@10 change vs PyTorch fp32 [95% CI] |
+| Default-export int8: bi-encoder setup | NDCG@10 [95% CI] | Recall@100 | MRR@10 | NDCG@10 change vs PyTorch fp32 [95% CI] |
 |---|---|---|---|---|
 | pytorch fp32 (reference) | 0.428 [0.396, 0.460] | 0.744 | 0.501 | - |
 | onnx fp32 queries, fp32 docs | 0.428 [0.396, 0.460] | 0.744 | 0.501 | +0.000 [+0.000, +0.000] |
 | int8 queries, fp32 docs | 0.415 [0.383, 0.448] | 0.742 | 0.487 | -0.013 [-0.020, -0.005] |
 | int8 queries, int8 docs | 0.405 [0.372, 0.437] | 0.723 | 0.464 | -0.023 [-0.036, -0.011] |
 
-| Reranker (off-the-shelf) | NDCG@10 PyTorch fp32 | NDCG@10 ONNX int8 | Change [95% CI] |
+| Default-export int8: reranker (off-the-shelf) | NDCG@10 PyTorch fp32 | NDCG@10 ONNX int8 | Change [95% CI] |
 |---|---|---|---|
 | rerank top 20 (dense first stage) | 0.4089 | 0.4081 | -0.001 [-0.005, +0.003] |
 | rerank top 100 (dense first stage) | 0.3788 | 0.3797 | +0.001 [-0.005, +0.006] |
 
-Int8 scores of the reranker correlate 0.998 (Pearson) and 0.997 (Spearman) with fp32 on 150 pairs.
+Int8 quality on the fused graph is being re-measured (a different graph, so it cannot be assumed to match).
 
-**Speed and size.** CPU only, one query per call, timings include tokenization, 100 queries after 3 warm-up queries.
-Hardware: **Apple M2 (arm64), 4 threads**, PyTorch 2.15.0, ONNX Runtime CPU provider, outside Docker.
+**Speed and size on an Apple M2.** CPU only, one query per call, timings include tokenization, 100 queries after 3 warm-up
+queries. Hardware: **Apple M2 (arm64), 4 threads**, PyTorch 2.15.0, ONNX Runtime CPU provider, outside Docker.
 
 | Question encoder (1 query) | p50 | p95 | Documents/s (batch 32) | Size |
 |---|---|---|---|---|
-| pytorch_fp32 | 4.8 ms | 6.0 ms | 117 | 90.9 MB |
-| onnx_fp32 | 1.9 ms | 2.9 ms | 61 | 90.4 MB |
-| onnx_int8 | 1.0 ms | 1.5 ms | 114 | 22.9 MB |
+| PyTorch fp32 (default) | 5.5 ms | 6.3 ms | 110 | 90.9 MB |
+| ONNX fp32, default export | 2.0 ms | 3.0 ms | 64 | 90.4 MB |
+| ONNX int8, default export | 1.0 ms | 1.5 ms | 120 | 22.9 MB |
+| ONNX fp32, fused | 1.7 ms | 2.6 ms | 73 | 90.3 MB |
+| ONNX int8, fused | 0.8 ms | 1.2 ms | 153 | 22.7 MB |
 
 | Reranker | depth 10 p50 / p95 | depth 20 p50 / p95 | depth 50 p50 / p95 | depth 100 p50 / p95 | Pairs/s (batch 32) | Size |
 |---|---|---|---|---|---|---|
-| pytorch_fp32 | 123 / 141 ms | 247 / 260 ms | 590 / 650 ms | 1213 / 1270 ms | 109 | 90.9 MB |
-| onnx_fp32 | 236 / 243 ms | 482 / 598 ms | 1308 / 1625 ms | 2761 / 3749 ms | 57 | 91.0 MB |
-| onnx_int8 | 127 / 130 ms | 256 / 265 ms | 652 / 722 ms | 1751 / 2313 ms | 103 | 23.0 MB |
+| PyTorch fp32 (default) | 121 / 130 ms | 264 / 292 ms | 619 / 713 ms | 1281 / 1353 ms | 104 | 90.9 MB |
+| ONNX fp32, default export | 245 / 306 ms | 498 / 536 ms | 1256 / 1329 ms | 3199 / 4628 ms | 54 | 91.0 MB |
+| ONNX int8, default export | 133 / 154 ms | 266 / 275 ms | 664 / 760 ms | 1709 / 2439 ms | 95 | 23.0 MB |
+| ONNX fp32, fused | 216 / 223 ms | 427 / 456 ms | 1028 / 1075 ms | 2120 / 2300 ms | 66 | 90.9 MB |
+| ONNX int8, fused | 100 / 104 ms | 198 / 206 ms | 537 / 714 ms | 1018 / 1245 ms | 137 | 22.9 MB |
+
+**Speed on x86 (earlier run, default export only).** Hardware: **Intel(R) Core(TM) i7-9700F CPU @ 3.00GHz (x86-64), 4 threads**, 15.9 GB RAM,
+Windows-10-10.0.26200-SP0, PyTorch 2.15.0+cpu, outside Docker. The fused variants have not been measured on x86 yet (pending).
+
+| Question encoder (1 query) | p50 | p95 | Documents/s (batch 32) | Size |
+|---|---|---|---|---|
+| PyTorch fp32 (default) | 7.7 ms | 9.5 ms | 54 | 90.9 MB |
+| ONNX fp32, default export | 3.3 ms | 5.3 ms | 40 | 90.4 MB |
+| ONNX int8, default export | 2.1 ms | 3.1 ms | 50 | 22.9 MB |
+
+| Reranker | depth 10 p50 / p95 | depth 20 p50 / p95 | depth 50 p50 / p95 | depth 100 p50 / p95 | Pairs/s (batch 32) | Size |
+|---|---|---|---|---|---|---|
+| PyTorch fp32 (default) | 222 / 838 ms | 423 / 504 ms | 1069 / 1190 ms | 2167 / 2230 ms | 54 | 90.9 MB |
+| ONNX fp32, default export | 346 / 424 ms | 680 / 738 ms | 1750 / 1773 ms | 3540 / 3596 ms | 41 | 91.0 MB |
+| ONNX int8, default export | 285 / 290 ms | 580 / 586 ms | 1478 / 1535 ms | 2978 / 3702 ms | 48 | 23.0 MB |
 
 What this shows:
 
-- **Int8 shrinks both models to about a quarter of the size** (91 MB to 23 MB) and the ONNX fp32 export is exact.
-- **The reranker tolerates int8; the bi-encoder is more sensitive.** Reranker quality is unchanged (changes of
-  about 0.001 NDCG@10 with intervals spanning zero). The bi-encoder loses -0.013 [-0.020, -0.005] NDCG@10 with int8 queries only and
-  -0.023 [-0.036, -0.011] with int8 documents as well, both significant. A plausible reason (not tested) is that small embedding errors
-  accumulate when a query is compared against 57,000 documents. For serving, this suggests int8 for the reranker and
-  fp32 for the stored document embeddings.
-- **On this machine ONNX did not make the reranker faster**, and the reranker dominates latency. ONNX fp32 was about 2x
-  slower than PyTorch, and int8 only matched PyTorch at depths 10 and 20 and was slower at depth 100. The single-query
-  encoder did speed up (4.8 ms to 1.0 ms with int8), but that is small next to the reranker. A possible explanation
-  (untested) is that PyTorch on Apple silicon uses matrix hardware that ONNX Runtime's CPU path does not, and that
-  int8 speedups are designed for x86 processors with 8-bit instructions. **These are Apple M2 numbers; the deployment
-  target is x86, so the speed comparison must be repeated there (pending) before drawing a conclusion.**
+- **The default ONNX export was slower than PyTorch for the reranker on both machines**, and I first concluded that ONNX
+  does not help. That conclusion was wrong: the exported graph had skipped a standard optimization step.
+- **With graph fusion plus int8, the reranker is about 1.26x faster than default PyTorch at depth 100 on the M2**
+  (1018 ms against 1281 ms p50), and the question
+  encoder about 6.7x faster (0.8 ms against 5.5 ms). Both models shrink to about a quarter of the size.
+  Fused fp32 alone is still slower than PyTorch, so the speedup comes from fusion and int8 together.
+- **Quality cost depends on the model.** With the default-export int8, the reranker lost nothing measurable and the bi-encoder lost
+  -0.013 [-0.020, -0.005] NDCG@10 (queries only) and
+  -0.023 [-0.036, -0.011] (queries and documents). A plausible reason (not tested) is that small
+  embedding errors accumulate when a query is compared against 57,000 documents, so stored document embeddings should stay fp32.
 
-Caveats: one machine, ARM, outside Docker; the quantization quality numbers are hardware independent but the speed
-numbers are not; the fine-tuned reranker has not been exported yet (the same script handles it).
+Caveats: single runs, no repeats across sessions (the same configuration varies by roughly 10 to 25% between runs on the M2);
+ARM and Windows machines outside Docker; the quality numbers are hardware independent but the speed numbers are not; the
+fine-tuned reranker has not been exported yet (the same script handles it); why the default export was slow is a hypothesis,
+not a measured cause.
 
-**Correction.** An earlier version of the reranker latency table (previous section) was measured on a PyTorch CPU
-path that returned NaN scores for this model: weights loaded straight from the file broke the CPU forward pass on
-this Mac (copying them into fresh memory fixes it; my first guess, oneDNN, was tested and was wrong). The quality numbers
-were unaffected (they came from the GPU and match ONNX to 1e-5), and the corrected latencies are within about 5 to 15%
-of the earlier ones. The code now raises on NaN and a regression test pins the correct scores.
+**Corrections.** (1) An earlier version of the reranker latency table was measured on a PyTorch CPU path that returned NaN scores for this
+model: weights loaded straight from the file broke the CPU forward pass on this Mac (copying them into fresh memory fixes it;
+my first guess, oneDNN, was tested and was wrong). Quality numbers were unaffected, the corrected latencies were within
+about 5 to 15% of the earlier ones, the code now raises on NaN, and a regression test pins correct scores. (2) The first
+Phase 5 conclusion that ONNX was not faster was caused by the missing fusion step, described above.
 
 Fine-tuned reranker, x86 and Docker latency, serving and the test split: *pending (later phases)*.
 

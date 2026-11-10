@@ -9,10 +9,11 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
 class CrossEncoder(nn.Module):
-    def __init__(self, name_or_path: str, max_length: int = 256):
+    def __init__(self, name_or_path: str, max_length: int = 256, attn_implementation: str | None = None):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(name_or_path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(name_or_path, num_labels=1)
+        kw = {"attn_implementation": attn_implementation} if attn_implementation else {}
+        self.model = AutoModelForSequenceClassification.from_pretrained(name_or_path, num_labels=1, **kw)
         # Weights loaded straight from the safetensors file made the CPU forward pass return NaN for this
         # model (macOS arm64, torch 2.15); copying them into fresh memory fixes it. Disabling oneDNN did not.
         for t in [*self.model.parameters(), *self.model.buffers()]:
