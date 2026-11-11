@@ -22,12 +22,15 @@ ENV PATH=/app/.venv/bin:$PATH \
     PYTHONPATH=/app/src \
     PYTHONUNBUFFERED=1 \
     FINQA_ARTIFACTS=/app/serving_artifacts \
-    FINQA_ORT_THREADS=4 \
+    FINQA_ORT_THREADS=2 \
+    FINQA_MAX_CONCURRENCY=2 \
     FINQA_ORT_SPIN=0 \
     OPENBLAS_NUM_THREADS=1 \
     OMP_NUM_THREADS=1 \
     TOKENIZERS_PARALLELISM=false
-# The last four keep the process inside its CPU limit. A container sees every core of the host, so by
+# Sized for `--cpus 4`: 2 threads per search x 2 searches at once, which was the only split measured
+# with no CPU throttling at every load (README, load test). Change both if you change --cpus.
+# The last four keep the rest of the process inside its CPU limit. A container sees every core of the host, so by
 # default NumPy and the tokenizer start one thread per host core and idle ONNX Runtime threads busy-wait;
 # together they overshoot `--cpus` and the kernel pauses the container (see the README, load test).
 

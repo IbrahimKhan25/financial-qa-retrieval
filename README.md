@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 (Docker run pending).
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F.
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -406,7 +406,56 @@ by roughly 20 times, the price of a step that did not improve quality here.
 
 Caveats: one run per scenario; the Locust client runs on the same 8-core laptop as the server and competes with it for
 CPU, so these numbers are a lower bound on server capacity; localhost has no network latency; load-test queries are the
-dev queries, used here for speed only. The same test inside Docker on the Intel i7-9700F: *pending*.
+dev queries, used here for speed only.
+
+### Load test inside Docker, with a CPU limit
+
+Hardware: Intel Core i7-9700F (8 cores), Docker Desktop on Windows (WSL2), container limited with `--cpus 4`, 7.7 GB RAM
+visible to the container, one uvicorn worker; the server used 779 MiB of memory (measured in the first run). Same test and same caveats as above. The
+load test also records how often the kernel paused the container for using more CPU than its limit (the cgroup
+`cpu.stat` counters, read before and after each scenario).
+
+The image's default settings, 2 ONNX Runtime threads per search and at most 2 searches at once
+(`results/load_test_x86_docker_t2_c2.json`):
+
+| Scenario | Concurrent users | Requests/s | p50 ms | p95 ms | p99 ms | Throttled periods | Failures |
+|---|---|---|---|---|---|---|---|
+| retrieve only (default) | 1 | 77 | 12.6 | 15.5 | 17.4 | 0% | 0 |
+| retrieve only (default) | 4 | 143 | 27.1 | 32.7 | 39.8 | 0% | 0 |
+| retrieve only (default) | 16 | 137 | 112.1 | 140.6 | 206.9 | 0% | 0 |
+| retrieve only (default) | 64 | 142 | 455.0 | 590.4 | 696.2 | 0% | 0 |
+| retrieve + rerank top 10 | 1 | 3.5 | 281.9 | 306.1 | 355.4 | 0% | 0 |
+| retrieve + rerank top 10 | 4 | 5.1 | 815.8 | 842.0 | 877.8 | 0% | 0 |
+
+**How those settings were found.** The first run in Docker was about 14 times slower than the M2 and these are the five
+configurations measured on the way, all with the same image inputs and `--cpus 4` (retrieve only):
+
+| Configuration | 1 user p50 ms | 4 users req/s | 16 users req/s | 64 users req/s | 64 users p95 ms | Throttled periods (1 / 4 / 16 / 64 users) |
+|---|---|---|---|---|---|---|
+| Library defaults, 4 threads, no limit on concurrent searches | 91.0 | 24 | 30 | 32 | 3,047 | 98% / 98% / 98% / 98% |
+| Thread caps, 4 threads, no limit | 13.3 | 131 | 84 | 87 | 1,029 | 0% / 95% / 92% / 84% |
+| Thread caps, 4 threads x 1 search at once | 13.1 | 81 | 83 | 84 | 958 | 0% / 0% / 0% / 0% |
+| **Thread caps, 2 threads x 2 searches at once** | 12.6 | 143 | 137 | 142 | 590 | 0% / 0% / 0% / 0% |
+| Thread caps, 1 thread x 4 searches at once | 13.4 | 162 | 152 | 135 | 746 | 0% / 1% / 90% / 80% |
+
+What happened, in order:
+
+1. **A container sees every core of the host, not its limit.** NumPy (OpenBLAS) and the tokenizer each started 8 threads
+   and idle ONNX Runtime threads busy-wait for work. Together they used far more than 4 CPUs, so the kernel paused the
+   container in 98% of its 100 ms scheduling periods, even with a single user. "Thread caps" (`OPENBLAS_NUM_THREADS=1`,
+   `OMP_NUM_THREADS=1`, `TOKENIZERS_PARALLELISM=false`, ONNX Runtime spinning off) removed that: one-user p50 went from
+   91.0 ms to 13.3 ms with no throttling.
+2. **Concurrent requests multiplied the threads again.** Each search used 4 threads and the server ran many searches at
+   once, so 4 users meant 16 busy threads. Throughput fell as users were added (131 to 84 requests/s). Making extra
+   requests wait (`FINQA_MAX_CONCURRENCY`) so that threads x searches at once = 4 fixed it.
+3. **2 x 2 is the default** because it was the only split with no throttling at every load, and it had the best 64-user
+   p95. 1 x 4 had the highest peak (162 requests/s at 4 users) but was throttled again at 16 and 64 users, since the web
+   server itself also needs CPU on top of 4 busy search threads; it also makes a single reranked request slow (580 ms
+   p50 against 282 ms for 2 x 2 and 191 ms for 4 x 1).
+
+Limits of this evidence: one 20 s run per scenario and configuration, so differences of a few percent mean nothing; the
+load generator shared the machine; and one thing is **not explained**: a single request takes about 13 ms here against
+about 6 ms on the M2, whatever the thread count. Files: `results/load_test_x86_docker_*.json`.
 
 Test-split numbers: *pending (final phase)*.
 
@@ -431,5 +480,5 @@ uv run python scripts/build_serving_artifacts.py     # writes serving_artifacts/
 uv run python scripts/check_serving_parity.py        # must print OK three times
 docker build -t finqa-serve .
 docker run --rm -p 8000:8000 --cpus 4 finqa-serve
-uv run python scripts/run_load_test.py --host http://localhost:8000 --tag x86_docker
+uv run python scripts/run_load_test.py --host http://localhost:8000 --tag x86_docker_t2_c2
 ```

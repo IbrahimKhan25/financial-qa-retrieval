@@ -1,0 +1,154 @@
+{
+ "tag": "x86_docker_t2_c2",
+ "server": {
+  "status": "ready",
+  "docs": 57638,
+  "alpha": 0.8,
+  "reranker": true,
+  "model": "3538e24906",
+  "built_at": "2026-11-10T11:25:50+00:00",
+  "hardware": {
+   "cpu_model": "Intel(R) Core(TM) i7-9700F CPU @ 3.00GHz",
+   "logical_cores": 8,
+   "threads_used": 2,
+   "ram_gb": 7.7,
+   "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+   "machine": "x86_64",
+   "python": "3.11.18",
+   "in_docker": true,
+   "cpu_limit": 4.0,
+   "ort_spin": false,
+   "blas_threads": "1",
+   "tokenizers_parallelism": "false",
+   "max_concurrent_searches": 2
+  }
+ },
+ "client_hardware": {
+  "cpu_model": "Intel(R) Core(TM) i7-9700F CPU @ 3.00GHz",
+  "logical_cores": 8,
+  "threads_used": null,
+  "ram_gb": 15.9,
+  "platform": "Windows-10-10.0.26200-SP0",
+  "machine": "AMD64",
+  "python": "3.11.9"
+ },
+ "note": "closed loop (no think time), k=10, hybrid; the Locust client runs on the same machine as the server and competes for CPU; times are end to end over HTTP on localhost; one run per scenario",
+ "warmup_s": 5,
+ "duration_s": 20,
+ "scenarios": {
+  "retrieve_u1": {
+   "users": 1,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 1600,
+   "failures": 0,
+   "requests_per_second": 76.61916323721319,
+   "p50_ms": 12.590150003234157,
+   "p95_ms": 15.548354995189582,
+   "p99_ms": 17.369268000984448,
+   "mean_ms": 12.956916687544435,
+   "cpu_throttle": {
+    "periods": 250,
+    "throttled_periods": 0,
+    "throttled_pct": 0.0,
+    "throttled_ms": 0.0,
+    "cpu_seconds_used": 27.97211
+   }
+  },
+  "retrieve_u4": {
+   "users": 4,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 2990,
+   "failures": 0,
+   "requests_per_second": 143.11330161264019,
+   "p50_ms": 27.076250000391155,
+   "p95_ms": 32.69251499441452,
+   "p99_ms": 39.75410300430667,
+   "mean_ms": 27.80347856184188,
+   "cpu_throttle": {
+    "periods": 254,
+    "throttled_periods": 0,
+    "throttled_pct": 0.0,
+    "throttled_ms": 0.0,
+    "cpu_seconds_used": 65.495736
+   }
+  },
+  "retrieve_u16": {
+   "users": 16,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 2861,
+   "failures": 0,
+   "requests_per_second": 136.8773085498553,
+   "p50_ms": 112.12620000151219,
+   "p95_ms": 140.61450000008335,
+   "p99_ms": 206.88570000056652,
+   "mean_ms": 117.05747770010758,
+   "cpu_throttle": {
+    "periods": 250,
+    "throttled_periods": 0,
+    "throttled_pct": 0.0,
+    "throttled_ms": 0.0,
+    "cpu_seconds_used": 65.756306
+   }
+  },
+  "retrieve_u64": {
+   "users": 64,
+   "rerank": false,
+   "rerank_depth": null,
+   "requests": 2971,
+   "failures": 0,
+   "requests_per_second": 141.89506908010225,
+   "p50_ms": 455.00300000276184,
+   "p95_ms": 590.4338500004087,
+   "p99_ms": 696.1549899962848,
+   "mean_ms": 453.20551948840733,
+   "cpu_throttle": {
+    "periods": 251,
+    "throttled_periods": 0,
+    "throttled_pct": 0.0,
+    "throttled_ms": 0.0,
+    "cpu_seconds_used": 65.502615
+   }
+  },
+  "rerank10_u1": {
+   "users": 1,
+   "rerank": true,
+   "rerank_depth": 10,
+   "requests": 74,
+   "failures": 0,
+   "requests_per_second": 3.531702531804223,
+   "p50_ms": 281.8521500012139,
+   "p95_ms": 306.12376499666425,
+   "p99_ms": 355.4464199967331,
+   "mean_ms": 284.7262135128895,
+   "cpu_throttle": {
+    "periods": 251,
+    "throttled_periods": 0,
+    "throttled_pct": 0.0,
+    "throttled_ms": 0.0,
+    "cpu_seconds_used": 47.548622
+   }
+  },
+  "rerank10_u4": {
+   "users": 4,
+   "rerank": true,
+   "rerank_depth": 10,
+   "requests": 106,
+   "failures": 0,
+   "requests_per_second": 5.067593032668334,
+   "p50_ms": 815.8418499988329,
+   "p95_ms": 842.0224500023323,
+   "p99_ms": 877.817575003428,
+   "mean_ms": 802.1033801885079,
+   "cpu_throttle": {
+    "periods": 251,
+    "throttled_periods": 0,
+    "throttled_pct": 0.0,
+    "throttled_ms": 0.0,
+    "cpu_seconds_used": 74.524975
+   }
+  }
+ }
+}
