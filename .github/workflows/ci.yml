@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The model and index files are too big for git, so they live in a GitHub Release.
+  # After rebuilding them: upload a new release, then change the tag and checksum here.
+  ARTIFACTS_TAG: artifacts-v1
+  ARTIFACTS_SHA256: ffdeccd643ceb4ac8851da7dff510d08e905b77e3262ba4cff783f898e8ff075
+  UV_VERSION: "0.12.5"
+
+defaults:
+  run:
+    shell: bash  # explicit bash turns on pipefail, so a failing script piped into tee still fails the step
+
+jobs:
+  test:
+    name: Lint and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      # The tests export small ONNX models from two public Hugging Face models; keep them between runs.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/huggingface
+          key: hf-minilm-v1
+      - name: Install (everything except the load-test tools)
+        run: uv sync --frozen --group dev --group train --group eval --group optimize --group serve
+      - name: Lint
+        run: uv run --no-sync ruff check src tests scripts
+      - name: Unit tests
+        run: uv run --no-sync pytest -q
+
+  gates:
+    name: Quality and latency gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # the latency gate needs the previous version of the code
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install (serving packages only, no PyTorch)
+        run: uv sync --frozen --group serve
+      - name: Download model and index files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$ARTIFACTS_TAG" --repo "$GITHUB_REPOSITORY" --pattern serving_artifacts.tar.gz
+          echo "$ARTIFACTS_SHA256  serving_artifacts.tar.gz" | sha256sum --check -
+          tar -xzf serving_artifacts.tar.gz
+          rm serving_artifacts.tar.gz
+      - name: Cache the FiQA dataset
+        uses: actions/cache@v6
+        with:
+          path: data/raw
+          key: fiqa-raw-v1
+      - name: Machine
+        run: |
+          echo "CPU: $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2), $(nproc) cores" | tee -a "$GITHUB_STEP_SUMMARY"
+      # Quality gate: all 500 dev questions through the serving code. Fails if dense, BM25 or hybrid NDCG@10 moves
+      # more than 0.002 from the values recorded when the files were built, or if hybrid falls below the floor.
+      - name: Quality gate (NDCG@10 on dev)
+        run: |
+          uv run --no-sync python scripts/check_serving_parity.py --threads 2 --min-hybrid 0.435 \
+            --out results/ci_serving_parity_dev.json | tee parity.txt
+          { echo "### Quality gate"; echo '```'; cat parity.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      # Latency gate: this commit against the commit before it (or the pull request's base), same machine, same job.
+      - name: Check out the baseline version
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          BASE="${PR_BASE:-$PUSH_BEFORE}"
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then BASE="$(git rev-parse HEAD~1)"; fi
+          echo "Baseline commit: $BASE" | tee -a "$GITHUB_STEP_SUMMARY"
+          git worktree add ../base "$BASE"
+      - name: Latency gate (p95 ratio against the baseline)
+        run: |
+          uv run --no-sync python scripts/latency_gate.py --base-src ../base/src --threads 2 --rounds 5 \
+            --max-ratio 1.3 --out results/ci_latency_gate.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: gate-results
+          path: results/ci_*.json
+
+  docker:
+    name: Docker build and smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download model and index files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$ARTIFACTS_TAG" --repo "$GITHUB_REPOSITORY" --pattern serving_artifacts.tar.gz
+          echo "$ARTIFACTS_SHA256  serving_artifacts.tar.gz" | sha256sum --check -
+          tar -xzf serving_artifacts.tar.gz
+          rm serving_artifacts.tar.gz
+      - name: Build the image
+        run: |
+          docker build -t finqa-serve .
+          echo "Image size: $(docker image inspect finqa-serve --format '{{.Size}}' | awk '{printf "%.0f MB", $1/1e6}')" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Start the container and wait until it is ready
+        run: |
+          CPUS=$(( $(nproc) < 4 ? $(nproc) : 4 ))
+          docker run -d --name finqa -p 8000:8000 --cpus "$CPUS" finqa-serve
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8000/ready > ready.json; then cat ready.json; exit 0; fi
+            sleep 1
+          done
+          echo "not ready after 60 s"; exit 1
+      - name: One real search must return 10 results
+        run: |
+          curl -sf -X POST http://localhost:8000/search -H 'content-type: application/json' \
+            -d '{"query": "How do I roll over a 401k into an IRA?", "k": 10}' > search.json
+          python3 -c "
+          import json
+          r = json.load(open('search.json'))
+          assert len(r['hits']) == 10, r
+          assert all(h['doc_id'] and h['snippet'] for h in r['hits']), r
+          print(r['timings_ms'])
+          "
+      - name: Container logs
+        if: always()
+        run: docker logs finqa

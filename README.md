@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F.
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F; Phase 8 (CI gates) runs on every push in GitHub Actions.
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -456,6 +456,37 @@ What happened, in order:
 Limits of this evidence: one 20 s run per scenario and configuration, so differences of a few percent mean nothing; the
 load generator shared the machine; and one thing is **not explained**: a single request takes about 13 ms here against
 about 6 ms on the M2, whatever the thread count. Files: `results/load_test_x86_docker_*.json`.
+
+## Continuous integration (Phase 8)
+
+`.github/workflows/ci.yml` runs three jobs on every push to `main` and every pull request.
+
+| Job | What it runs | It fails when |
+|---|---|---|
+| Lint and unit tests | `ruff` on `src`, `tests`, `scripts`; `pytest` | any lint error or failing test |
+| Quality and latency gates | all 500 dev questions through the serving code, then a timing comparison | see below |
+| Docker build and smoke test | builds the image, starts it, sends one real search | the image does not build, is not ready in 60 s, or does not return 10 results |
+
+The fine-tuned model and the index are too big for git (268 MB), so CI downloads them from a GitHub Release
+(`artifacts-v1`, one 206 MB file) and checks its SHA-256 before using it. The tag and checksum are pinned in the
+workflow, so a model change is a visible code change.
+
+**Quality gate.** `scripts/check_serving_parity.py --min-hybrid 0.435` fails if dense, BM25 or hybrid NDCG@10 on dev
+moves more than 0.002 from the value recorded when the files were built, or if hybrid drops below 0.435 (it is 0.4439).
+The first rule catches code changes that alter results by accident; the floor catches a worse model being uploaded
+together with its own, lower, expected values.
+
+**Latency gate.** `scripts/latency_gate.py` times the new code and the previous commit (or the pull request's base) on
+the same machine in the same job: 5 rounds each of 300 single searches, alternating which version goes first, each in
+a fresh process. It fails if the median p95 of the new code is more than 1.3 times the baseline's. It is a ratio and
+not a millisecond limit because CI machines differ in speed from run to run.
+
+Checked on the M2 before the first CI run (`2` threads): the same code against itself gave p95 7.21 ms against 7.20 ms,
+ratio 1.00; a copy with a 3 ms sleep added to every search gave ratio 1.55 and failed.
+
+Limits: the latency gate compares each commit only with the one before it, so several small slowdowns in a row can each
+pass; it times single searches in one process, not the HTTP server under load; and the 1.3 limit is a starting value
+that has not yet been tuned against the noise of GitHub's machines. The gates use the dev split only.
 
 Test-split numbers: *pending (final phase)*.
 

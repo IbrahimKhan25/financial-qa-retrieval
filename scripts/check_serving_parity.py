@@ -1,7 +1,7 @@
 """Golden check: the served pipeline must reproduce the offline dev numbers before anything is timed.
 
 Runs all dev queries through Retriever in each mode and compares NDCG@10 with the manifest's expected values.
-Exit code 1 on mismatch.
+Exit code 1 on mismatch, or if hybrid NDCG@10 is below --min-hybrid (the floor used by CI).
 """
 import argparse
 import json
@@ -20,6 +20,8 @@ def main():
     ap.add_argument("--artifacts", default="serving_artifacts")
     ap.add_argument("--tol", type=float, default=0.002)
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--min-hybrid", type=float, default=None,
+                    help="fail if hybrid NDCG@10 is below this, whatever the manifest expects")
     ap.add_argument("--out", default="results/serving_parity_dev.json")
     args = ap.parse_args()
 
@@ -38,6 +40,11 @@ def main():
         flag = "OK" if abs(diff) <= args.tol else "MISMATCH"
         ok &= abs(diff) <= args.tol
         print(f"{mode:7s} ndcg@10 {got['ndcg@10']:.4f} expected {expected[mode]:.4f} diff {diff:+.4f}  {flag}")
+    if args.min_hybrid is not None:
+        hybrid = res["modes"]["hybrid"]["ndcg@10"]
+        res["min_hybrid"] = args.min_hybrid
+        ok &= hybrid >= args.min_hybrid
+        print(f"floor   hybrid ndcg@10 {hybrid:.4f} >= {args.min_hybrid:.4f}  {'OK' if hybrid >= args.min_hybrid else 'BELOW FLOOR'}")
     res["passed"] = ok
     Path(args.out).write_text(json.dumps(res, indent=1))
     sys.exit(0 if ok else 1)
