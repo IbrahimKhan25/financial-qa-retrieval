@@ -33,9 +33,9 @@ Official test split, 648 questions, evaluated once after every choice was fixed 
 ## Architecture
 
 ```mermaid
-flowchart TB
+flowchart LR
   subgraph OFF["Offline: train and build"]
-    direction LR
+    direction TB
     DATA["FiQA-2018"] --> TRAIN["Fine-tune<br/>bi-encoder"]
     TRAIN --> EVAL["Evaluate<br/>on dev"]
     EVAL --> EXPORT["Export<br/>to ONNX"]
@@ -43,7 +43,7 @@ flowchart TB
   end
 
   subgraph ON["Online: one Docker image"]
-    direction LR
+    direction TB
     Q["POST /search"] --> ENC["Encode<br/>question"]
     Q --> BM["BM25"]
     ENC --> DENSE["Dense<br/>search"]
@@ -55,7 +55,7 @@ flowchart TB
   end
 
   subgraph CI["CI on every push"]
-    direction LR
+    direction TB
     T["Lint, tests"] --> G["Quality and<br/>latency gates"] --> S["Docker<br/>smoke test"]
   end
 
@@ -238,8 +238,8 @@ No test-set number had been computed at this point.
 
 The off-the-shelf `cross-encoder/ms-marco-MiniLM-L-6-v2` rescored the first stage's top-100 candidates; the
 rerank depth is how many of the top candidates it reorders (the rest keep their order, so Recall@100 never
-changes). Question and post are encoded together, post trimmed to 256 tokens. A fine-tuned reranker is
-**pending** (it needs a GPU run on Colab).
+changes). Question and post are encoded together, post trimmed to 256 tokens. The fine-tuned reranker is
+in the next section.
 
 | First stage | Reranking | NDCG@10 [95% CI] | MRR@10 | NDCG@10 change vs no reranking [95% CI] |
 |---|---|---|---|---|
@@ -643,19 +643,35 @@ is untuned, so the gap to BM25 is against a default baseline.
 
 ## Reproduce
 
+Setup, data and the baselines (CPU is enough):
+
 ```bash
 uv sync --group dev --group train --group eval
 uv run python scripts/download_data.py
-uv run python scripts/run_baselines.py --split dev      # Phase 1 baselines
-uv run python scripts/final_test_eval.py                # final test run; refuses if results/final_test.json exists
+uv run python scripts/run_baselines.py --split dev
 uv run pytest -q
 ```
 
-Phase 2 training runs on a GPU: open `notebooks/colab_train.ipynb` in Colab (T4) and run the cells in order;
-it mines negatives and trains rows B, C, C2 and D, writing `results/train_*.json`.
-Phase 3 (`uv run python scripts/run_hybrid.py`) needs the row D checkpoint from that run in `checkpoints/bi_encoder_D_mined`.
+Training runs on a GPU: open `notebooks/colab_train.ipynb` in Colab (T4) and run the cells in order. It mines
+negatives and trains rows B, C, C2 and D, writing `results/train_*.json`. Copy the row D checkpoint to
+`checkpoints/bi_encoder_D_mined`; every later step needs it.
 
-Phase 6 (serving), after the checkpoints and ONNX models exist:
+Dev experiments, in the order of the sections above:
+
+```bash
+uv run python scripts/run_hybrid.py                                   # RRF, weighted fusion, alpha sweep
+uv run python scripts/make_candidates.py --first-stage bm25 --out data/candidates/dev_bm25.json
+uv run python scripts/make_candidates.py --first-stage dense --out data/candidates/dev_dense_D.json
+uv run python scripts/make_candidates.py --first-stage hybrid --out data/candidates/dev_hybrid_D.json
+uv run python scripts/run_rerank.py --candidates hybrid=data/candidates/dev_hybrid_D.json \
+  dense=data/candidates/dev_dense_D.json bm25=data/candidates/dev_bm25.json
+uv run python scripts/export_onnx.py                                  # fp32 and int8, default and fused
+uv run python scripts/eval_quantized.py --variant fused               # quality cost of ONNX and int8
+uv run python scripts/benchmark_inference.py                          # p50/p95 latency and model size
+uv run python scripts/error_analysis.py                               # failures on dev, sample for labelling
+```
+
+Serving, after the checkpoint and ONNX models exist:
 
 ```bash
 uv sync --all-groups
@@ -665,3 +681,6 @@ docker build -t finqa-serve .
 docker run --rm -p 8000:8000 --cpus 4 finqa-serve
 uv run python scripts/run_load_test.py --host http://localhost:8000 --tag x86_docker_t2_c2
 ```
+
+The test split has already been evaluated. `scripts/final_test_eval.py` refuses to run while
+`results/final_test.json` exists, so the committed test numbers cannot be quietly replaced.
