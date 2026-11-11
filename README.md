@@ -510,10 +510,10 @@ primary cause (`results/error_analysis_dev_labels.json`, with a one-line reason 
 
 | Cause | Of 30 |
 |---|---|
-| Labelled answer responds to details in the full question post; the query is only the title | 10 |
+| Labelled answer responds to details in the full question post; the query is only the title | 12 |
 | Top results are reasonable answers that are not labelled (labels cover only answers posted under that question) | 7 |
 | Top results are on the right topic but miss the specific point asked | 7 |
-| Labelled answer gives the advice without using the question's key terms | 4 |
+| Labelled answer gives the advice without using the question's key terms | 2 |
 | BM25 had a relevant answer in its top 3, dense missed it, and the 0.8 dense weight buried it | 2 |
 
 Examples. "Can a F-1 student visa holder loan a car from bmw?": the top results are about car loans for F-1 students,
@@ -523,15 +523,17 @@ the retriever returned traded options (covered calls), and the labelled answers 
 understand Return on Capital (Joel Greenblatt's Magic Formula version)": BM25 ranked a labelled answer 3rd on the rare
 terms, dense did not have it in its top 100, and the hybrid put it 44th.
 
-What this says: in 17 of the 30 the result list is hard to call wrong from the query text alone (the first two rows),
+What this says: in 19 of the 30 the result list is hard to call wrong from the query text alone (the first two rows),
 so part of the gap to a perfect score comes from the benchmark, where queries are titles and labels are sparse. The
-other 13 are retrieval mistakes: 7 where the topic was matched but not the point, 4 where the answer shares few words
+other 11 are retrieval mistakes: 7 where the topic was matched but not the point, 2 where the answer shares few words
 with the question, and 2 lost in fusion.
 
-Limits: 30 questions, one reader, one pass, one cause each though some fit two; answers were read from their first 700
-characters and results from their first 400; "responds to the full question post" is inferred from the answer mentioning
-details the title lacks, because the dataset does not include the post. The 17 and 13 are counts in a sample of 30, not
-estimates for all 150 with any precision. Nothing here was used to change the model, and no test-split question was read.
+Limits: 30 questions, one reader, one cause each though some fit two. The first pass read answers from their first 700
+characters and results from their first 400. A second pass re-read the 8 least certain with 1,500 characters and moved
+2 of them from "few shared words" to "responds to the full post", so the other 22 could shift too on a fuller read.
+"Responds to the full question post" is inferred from the answer mentioning details the title lacks, because the
+dataset does not include the post. The 19 and 11 are counts in a sample of 30, not estimates for all 150 with any
+precision. Nothing here was used to change the model, and no test-split question was read.
 
 Test-split numbers: *pending (final phase)*.
 

@@ -20,11 +20,11 @@
    "not_failed": 11.251428571428571
   },
   "sample_causes": {
-   "body": 10,
+   "body": 12,
    "aspect": 7,
    "unlabelled": 7,
-   "vocabulary": 4,
-   "fusion": 2
+   "fusion": 2,
+   "vocabulary": 2
   }
  },
  "sample_seed": 0,
@@ -138,7 +138,7 @@
     }
    ],
    "cause": "fusion",
-   "cause_note": "BM25 rank 2, dense not in top 100, hybrid rank 37; top results define index funds"
+   "cause_note": "BM25 rank 2, dense not in top 100, hybrid rank 37; the labelled answer opens on who computes the S&P 500 and reaches index funds and taxes only later"
   },
   {
    "query_id": "5337",
@@ -894,8 +894,8 @@
      "text": "\"Index funds may invest either in index components directly or in other instruments (like ETFs, index options, futures, etc.) which are highly correlated with the index. The specific fund prospectus or description on any decent financial site should contain these details. Index funds are not actively managed, but that does not mean they aren't managed at all - if index changes and the fund include ..."
     }
    ],
-   "cause": "vocabulary",
-   "cause_note": "Labelled answer talks about reinvested dividends and the 'Income' class; it never uses 'index' or 'tracker'"
+   "cause": "body",
+   "cause_note": "Labelled answer explains a 'hypothetical growth' chart and the Income class from the question post; it never addresses index against accumulation"
   },
   {
    "query_id": "1320",
@@ -1020,8 +1020,8 @@
      "text": "Calculating and adjusting cost basis accurately is a daunting task, but there is a (paid) online tool, NetBasis, which will automatically calculate and adjust your cost basis. It is used by brokerage firms and Fortune 500 companies and is available to the public. Go to netbasis.com. All you need are the purchase and sale dates and shares of the stock or mutual fund and the system has the rest of t ..."
     }
    ],
-   "cause": "vocabulary",
-   "cause_note": "Labelled answers advise on selling at a loss without mentioning cost basis or FIFO; top results explain FIFO"
+   "cause": "body",
+   "cause_note": "Labelled answers advise on the poster's own position (which shares to sell, using the loss); top results explain FIFO and cost basis in general"
   },
   {
    "query_id": "3816",

@@ -1,5 +1,5 @@
 {
- "note": "One primary cause per sampled failure (seed 0, 30 of 150), assigned by reading the question, the labelled relevant answers (first 700 characters) and the top 3 results (first 400 characters). One reader, one pass. Causes overlap in places; the note gives the reason for the choice. Queries are question titles only, so 'answer depends on the question body' is inferred from the answer referring to details the title does not contain.",
+ "note": "One primary cause per sampled failure (seed 0, 30 of 150), assigned by reading the question, the labelled relevant answers (first 700 characters) and the top 3 results (first 400 characters). One reader, one pass. Causes overlap in places; the note gives the reason for the choice. Queries are question titles only, so 'answer depends on the question body' is inferred from the answer referring to details the title does not contain. Second pass: the 8 least certain labels were re-read with the full answer text (1,500 characters); 2 changed (5569 and 8803, vocabulary to body) and the note for 1107 was corrected.",
  "causes": {
   "body": "Labelled answer responds to details in the full question post, which the query (title only) does not contain",
   "unlabelled": "Top results are reasonable answers to the query but are not labelled relevant (labels cover only the answers posted under that question)",
@@ -8,35 +8,125 @@
   "fusion": "BM25 alone ranked a relevant answer in the top 3, dense missed it, and the 0.8 dense weight buried it"
  },
  "labels": {
-  "6937": ["aspect", "Top results cover employee options in general, not their effect on the share price"],
-  "7294": ["unlabelled", "Top results explain trading currencies through brokers; relevant answer at rank 21"],
-  "1107": ["fusion", "BM25 rank 2, dense not in top 100, hybrid rank 37; top results define index funds"],
-  "5337": ["body", "Top results answer car loans for F-1 students directly; labelled answer is about dealer financing and cooling-off periods"],
-  "8088": ["body", "Title is 'Beginner questions about stock market'; labelled answers are about shareholder liability"],
-  "7975": ["aspect", "Retriever read 'share options' as traded options (covered calls); labelled answers are about employee options"],
-  "7202": ["unlabelled", "Top results discuss currency risk directly; the labelled answer is a 65-word fragment whose list was lost"],
-  "5836": ["aspect", "Top results explain candlestick charts, not why candles overlap or gap; relevant at rank 16"],
-  "7881": ["aspect", "Top results explain what brokerages do; nothing on direct registration"],
-  "668": ["body", "Labelled answer is about anti-money-laundering flags on large monthly amounts, a detail not in the title"],
-  "5027": ["unlabelled", "Two-word query 'valuing options'; top results are option valuation answers, labelled one is a 789-word binomial model walkthrough"],
-  "806": ["fusion", "BM25 rank 3 on the rare terms, dense not in top 100, hybrid rank 44; dense returned rate-of-return calculations"],
-  "3312": ["vocabulary", "Labelled answers explain debit card and cheque holds; they barely mention withdrawing"],
-  "5588": ["aspect", "Top results give return formulas; labelled answer is about estimating a distribution from history"],
-  "868": ["vocabulary", "Labelled answer is 38 words and never says '401k' or 'withhold'"],
-  "2062": ["body", "Top result matches 'Google Finance' literally; labelled answers discuss LinkedIn's P/E from the question post"],
-  "5235": ["unlabelled", "Top 3 are all direct lease-versus-buy answers"],
-  "3441": ["unlabelled", "Top results are ETF retirement allocations"],
-  "60": ["aspect", "Top results cover business expenses in general, not health services; relevant at rank 14"],
-  "2215": ["body", "Top results explain PMI equity rules directly; labelled answers are about a dispute with one bank over an appraisal"],
-  "17": ["body", "Labelled answer is about deducting start-up costs; title asks about exemptions in general"],
-  "6344": ["body", "Labelled answer is about UK tax on the income; top results are about UK bank accounts"],
-  "7826": ["body", "Top results answer the delisting question; labelled answer is about a buyout offer to minority shareholders"],
-  "5569": ["vocabulary", "Labelled answer talks about reinvested dividends and the 'Income' class; it never uses 'index' or 'tracker'"],
-  "1320": ["body", "Top results suggest how a beginner can learn; labelled answers correct specific points in the question post"],
-  "4164": ["body", "Title is 'Where should I be investing my money?'; labelled answer says to pay off a car loan from the post"],
-  "8803": ["vocabulary", "Labelled answers advise on selling at a loss without mentioning cost basis or FIFO; top results explain FIFO"],
-  "3816": ["unlabelled", "Third result says there are two ways to make money from shares, dividends and capital gains; relevant at rank 28"],
-  "5909": ["aspect", "Top results are about student loans and part-time work during study, not the gap after graduation"],
-  "6185": ["unlabelled", "Top results give investment options for a 5 to 7 year horizon; relevant at rank 14"]
+  "6937": [
+   "aspect",
+   "Top results cover employee options in general, not their effect on the share price"
+  ],
+  "7294": [
+   "unlabelled",
+   "Top results explain trading currencies through brokers; relevant answer at rank 21"
+  ],
+  "1107": [
+   "fusion",
+   "BM25 rank 2, dense not in top 100, hybrid rank 37; the labelled answer opens on who computes the S&P 500 and reaches index funds and taxes only later"
+  ],
+  "5337": [
+   "body",
+   "Top results answer car loans for F-1 students directly; labelled answer is about dealer financing and cooling-off periods"
+  ],
+  "8088": [
+   "body",
+   "Title is 'Beginner questions about stock market'; labelled answers are about shareholder liability"
+  ],
+  "7975": [
+   "aspect",
+   "Retriever read 'share options' as traded options (covered calls); labelled answers are about employee options"
+  ],
+  "7202": [
+   "unlabelled",
+   "Top results discuss currency risk directly; the labelled answer is a 65-word fragment whose list was lost"
+  ],
+  "5836": [
+   "aspect",
+   "Top results explain candlestick charts, not why candles overlap or gap; relevant at rank 16"
+  ],
+  "7881": [
+   "aspect",
+   "Top results explain what brokerages do; nothing on direct registration"
+  ],
+  "668": [
+   "body",
+   "Labelled answer is about anti-money-laundering flags on large monthly amounts, a detail not in the title"
+  ],
+  "5027": [
+   "unlabelled",
+   "Two-word query 'valuing options'; top results are option valuation answers, labelled one is a 789-word binomial model walkthrough"
+  ],
+  "806": [
+   "fusion",
+   "BM25 rank 3 on the rare terms, dense not in top 100, hybrid rank 44; dense returned rate-of-return calculations"
+  ],
+  "3312": [
+   "vocabulary",
+   "Labelled answers explain debit card and cheque holds; they barely mention withdrawing"
+  ],
+  "5588": [
+   "aspect",
+   "Top results give return formulas; labelled answer is about estimating a distribution from history"
+  ],
+  "868": [
+   "vocabulary",
+   "Labelled answer is 38 words and never says '401k' or 'withhold'"
+  ],
+  "2062": [
+   "body",
+   "Top result matches 'Google Finance' literally; labelled answers discuss LinkedIn's P/E from the question post"
+  ],
+  "5235": [
+   "unlabelled",
+   "Top 3 are all direct lease-versus-buy answers"
+  ],
+  "3441": [
+   "unlabelled",
+   "Top results are ETF retirement allocations"
+  ],
+  "60": [
+   "aspect",
+   "Top results cover business expenses in general, not health services; relevant at rank 14"
+  ],
+  "2215": [
+   "body",
+   "Top results explain PMI equity rules directly; labelled answers are about a dispute with one bank over an appraisal"
+  ],
+  "17": [
+   "body",
+   "Labelled answer is about deducting start-up costs; title asks about exemptions in general"
+  ],
+  "6344": [
+   "body",
+   "Labelled answer is about UK tax on the income; top results are about UK bank accounts"
+  ],
+  "7826": [
+   "body",
+   "Top results answer the delisting question; labelled answer is about a buyout offer to minority shareholders"
+  ],
+  "5569": [
+   "body",
+   "Labelled answer explains a 'hypothetical growth' chart and the Income class from the question post; it never addresses index against accumulation"
+  ],
+  "1320": [
+   "body",
+   "Top results suggest how a beginner can learn; labelled answers correct specific points in the question post"
+  ],
+  "4164": [
+   "body",
+   "Title is 'Where should I be investing my money?'; labelled answer says to pay off a car loan from the post"
+  ],
+  "8803": [
+   "body",
+   "Labelled answers advise on the poster's own position (which shares to sell, using the loss); top results explain FIFO and cost basis in general"
+  ],
+  "3816": [
+   "unlabelled",
+   "Third result says there are two ways to make money from shares, dividends and capital gains; relevant at rank 28"
+  ],
+  "5909": [
+   "aspect",
+   "Top results are about student loans and part-time work during study, not the gap after graduation"
+  ],
+  "6185": [
+   "unlabelled",
+   "Top results give investment options for a 5 to 7 year horizon; relevant at rank 14"
+  ]
  }
 }
