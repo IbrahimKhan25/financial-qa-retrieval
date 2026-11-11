@@ -1,11 +1,82 @@
 # Financial QA Retrieval
 
-Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
-(PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
+[![CI](https://github.com/IbrahimKhan25/financial-qa-retrieval/actions/workflows/ci.yml/badge.svg)](https://github.com/IbrahimKhan25/financial-qa-retrieval/actions/workflows/ci.yml)
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F; Phase 8 (CI gates) runs on every push in GitHub Actions; Phase 9 error analysis done on dev (150 of 500 questions have no relevant answer in the top 10; 30 of them read and labelled by cause); final test-set run done once (hybrid NDCG@10 0.432 on test, 0.444 on dev).
-Test-set numbers were produced once, at the end, by a single script (`scripts/final_test_eval.py`). Every number below comes from a
-committed file in `results/`.
+A search service for financial questions, built end to end on the BEIR FiQA-2018 benchmark (57,638 answer posts): a
+bi-encoder fine-tuned with my own PyTorch training loop, fused with BM25, exported to ONNX, served with FastAPI in
+Docker, and guarded by CI gates on quality and latency. Every number in this README comes from a committed file in
+`results/`, including the experiments that did not work.
+
+## Headline results
+
+Official test split, 648 questions, evaluated once after every choice was fixed on the dev split
+([details](#final-test-set-results-648-queries-run-once)):
+
+| System | NDCG@10 [95% CI] | Recall@100 | MRR@10 |
+|---|---|---|---|
+| BM25 | 0.233 [0.209, 0.256] | 0.515 | 0.288 |
+| all-MiniLM-L6-v2, zero-shot | 0.369 [0.342, 0.396] | 0.706 | 0.445 |
+| Fine-tuned bi-encoder | 0.419 [0.390, 0.448] | 0.745 | 0.501 |
+| **Hybrid: fine-tuned bi-encoder + BM25 (served)** | **0.432** [0.404, 0.461] | 0.739 | 0.514 |
+
+| Question | Answer | Evidence |
+|---|---|---|
+| Did fine-tuning help? | Yes: +0.050 NDCG@10 over zero-shot on test, 95% CI [+0.038, +0.063] | paired bootstrap, 10,000 resamples |
+| Which negatives mattered? | Negatives mined from a fine-tuned model (+0.014 on dev over in-batch only). BM25 hard negatives did not help | [ablation](#bi-encoder-fine-tuning-ablation) |
+| Did hybrid search help? | Weighted fusion: +0.013 on test [+0.007, +0.021]. Equal-weight RRF made it worse (-0.061 on dev) | [hybrid](#hybrid-retrieval-bm25--dense-dev-500-queries) |
+| Did a reranker help? | No. Off-the-shelf and fine-tuned cross-encoders both scored below the first stage on dev, so the service does not rerank by default | [reranking](#cross-encoder-reranking-dev-500-queries-off-the-shelf-reranker) |
+| What did ONNX and int8 buy? | ONNX fp32 with graph fusion: question encoding 5.5 ms to 1.7 ms p50 on an Apple M2, same retrieval quality. int8 models are 4x smaller (90.9 to 22.7 MB) but cost the bi-encoder 0.015 to 0.028 NDCG@10 on dev, so the served encoder stays fp32 | [optimization](#inference-optimization-onnx-export-graph-fusion-and-int8-quantization-dev) |
+| How fast is the service? | Docker, 4-CPU limit, Intel i7-9700F: 12.6 ms p50 for one user; 142 requests/s at 64 users with p95 590 ms | [load tests](#load-test-inside-docker-with-a-cpu-limit) |
+| What went wrong in Docker? | The first run was throttled in 98% of scheduling periods (32 requests/s). Capping threads and limiting concurrent searches gave 142 requests/s | same section |
+| Where does it still fail? | 150 of 500 dev questions have no labelled answer in the top 10; in a sample of 30, 19 trace to the benchmark (title-only queries, sparse labels) and 11 are retrieval mistakes | [error analysis](#error-analysis-phase-9-dev) |
+
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph OFF["Offline: train, evaluate, build"]
+    direction LR
+    DATA["FiQA-2018<br/>train / dev / test"] --> TRAIN["Fine-tune bi-encoder<br/>PyTorch, InfoNCE,<br/>mined hard negatives"]
+    TRAIN --> EVAL["Evaluate on dev<br/>NDCG@10, bootstrap CIs,<br/>MLflow"]
+    EVAL --> EXPORT["Export to ONNX<br/>graph fusion"]
+    EXPORT --> BUILD["Build serving files<br/>doc embeddings, BM25 index,<br/>text store, manifest"]
+  end
+
+  subgraph ON["Online: one Docker image, no PyTorch"]
+    direction LR
+    Q["POST /search"] --> ENC["Question encoder<br/>ONNX Runtime"]
+    Q --> BM["BM25<br/>bm25s"]
+    ENC --> DENSE["Exact search over<br/>57,638 vectors"]
+    DENSE --> FUSE["Weighted fusion<br/>0.8 dense + 0.2 BM25"]
+    BM --> FUSE
+    FUSE --> OUT["Top-k answers"]
+    FUSE -. "rerank: true (off by default)" .-> CE["Cross-encoder<br/>ONNX int8"]
+    CE -.-> OUT
+  end
+
+  subgraph CI["GitHub Actions, every push"]
+    direction LR
+    T["Lint and unit tests"]
+    G["Quality gate: dev NDCG@10<br/>Latency gate: p95 ratio"]
+    S["Docker build and smoke test"]
+  end
+
+  OFF -- "serving files baked into the image" --> ON
+  OFF -. "same files as a release, checksum pinned" .-> CI
+```
+
+## Contents
+
+- [Data and protocol](#data-and-protocol)
+- [Results on dev](#results-dev-500-queries): baselines, fine-tuning ablation, hybrid retrieval, reranking, ONNX and int8
+- [Serving](#serving-phase-6): FastAPI, load tests, Docker CPU throttling
+- [Continuous integration](#continuous-integration-phase-8)
+- [Error analysis](#error-analysis-phase-9-dev)
+- [Final test-set results](#final-test-set-results-648-queries-run-once)
+- [Reproduce](#reproduce)
+
+Not done: the optional cloud deployment (Azure Container Apps with Terraform) has not been started. One training seed
+throughout.
 
 ## Data and protocol
 
