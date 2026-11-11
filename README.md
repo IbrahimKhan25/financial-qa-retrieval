@@ -34,36 +34,40 @@ Official test split, 648 questions, evaluated once after every choice was fixed 
 
 ```mermaid
 flowchart TB
-  subgraph OFF["Offline: train, evaluate, build"]
+  subgraph OFF["Offline: train and build"]
     direction LR
-    DATA["FiQA-2018<br/>train / dev / test"] --> TRAIN["Fine-tune bi-encoder<br/>PyTorch, InfoNCE,<br/>mined hard negatives"]
-    TRAIN --> EVAL["Evaluate on dev<br/>NDCG@10, bootstrap CIs,<br/>MLflow"]
-    EVAL --> EXPORT["Export to ONNX<br/>graph fusion"]
-    EXPORT --> BUILD["Build serving files<br/>doc embeddings, BM25 index,<br/>text store, manifest"]
+    DATA["FiQA-2018"] --> TRAIN["Fine-tune<br/>bi-encoder"]
+    TRAIN --> EVAL["Evaluate<br/>on dev"]
+    EVAL --> EXPORT["Export<br/>to ONNX"]
+    EXPORT --> BUILD["Build<br/>serving files"]
   end
 
-  subgraph ON["Online: one Docker image, no PyTorch"]
+  subgraph ON["Online: one Docker image"]
     direction LR
-    Q["POST /search"] --> ENC["Question encoder<br/>ONNX Runtime"]
-    Q --> BM["BM25<br/>bm25s"]
-    ENC --> DENSE["Exact search over<br/>57,638 vectors"]
-    DENSE --> FUSE["Weighted fusion<br/>0.8 dense + 0.2 BM25"]
+    Q["POST /search"] --> ENC["Encode<br/>question"]
+    Q --> BM["BM25"]
+    ENC --> DENSE["Dense<br/>search"]
+    DENSE --> FUSE["Fuse<br/>0.8 / 0.2"]
     BM --> FUSE
-    FUSE --> OUT["Top-k answers"]
-    FUSE -. "rerank: true (off by default)" .-> CE["Cross-encoder<br/>ONNX int8"]
+    FUSE --> OUT["Top-k"]
+    FUSE -.-> CE["Rerank<br/>(off)"]
     CE -.-> OUT
   end
 
-  subgraph CI["GitHub Actions, every push"]
+  subgraph CI["CI on every push"]
     direction LR
-    T["Lint and unit tests"]
-    G["Quality gate: dev NDCG@10<br/>Latency gate: p95 ratio"]
-    S["Docker build and smoke test"]
+    T["Lint, tests"] --> G["Quality and<br/>latency gates"] --> S["Docker<br/>smoke test"]
   end
 
-  OFF -- "serving files baked into the image" --> ON
-  OFF -. "same files as a release, checksum pinned" .-> CI
+  OFF -- "baked into image" --> ON
+  OFF -. "release file" .-> CI
 ```
+
+Offline, the bi-encoder is fine-tuned with InfoNCE and mined hard negatives, scored on dev with bootstrap CIs, exported to
+ONNX with graph fusion, and the document embeddings, BM25 index and text store are built once. Online, the question encoder runs
+in ONNX Runtime (no PyTorch), dense search is exact over 57,638 vectors, and fusion is 0.8 dense + 0.2 BM25. The int8
+cross-encoder reranker is available with `"rerank": true` and off by default. CI gates dev NDCG@10 and p95 latency, then
+builds the image and smoke-tests it.
 
 ## Contents
 
