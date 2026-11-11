@@ -3,8 +3,8 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F; Phase 8 (CI gates) runs on every push in GitHub Actions; Phase 9 error analysis done on dev (150 of 500 questions have no relevant answer in the top 10; 30 of them read and labelled by cause).
-Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F; Phase 8 (CI gates) runs on every push in GitHub Actions; Phase 9 error analysis done on dev (150 of 500 questions have no relevant answer in the top 10; 30 of them read and labelled by cause); final test-set run done once (hybrid NDCG@10 0.432 on test, 0.444 on dev).
+Test-set numbers were produced once, at the end, by a single script (`scripts/final_test_eval.py`). Every number below comes from a
 committed file in `results/`.
 
 ## Data and protocol
@@ -12,8 +12,8 @@ committed file in `results/`.
 - BEIR FiQA-2018 (`fiqa.zip`, sha256 `32c7df99ed21252fdfb2cf3f5673502a8d245ee0c44c4a133570d92ce2b3ad02`).
 - Corpus 57,638 docs, 6,648 queries. Query splits are disjoint:
   train 5,500 (14,166 qrels), **dev 500** (1,238), test 648 (1,706).
-- Model selection and tuning use the official **dev** split only. The test split is not evaluated
-  until the final run (`run_baselines.py` refuses `--split test`).
+- Model selection and tuning use the official **dev** split only. The test split was not evaluated
+  until the single final run (the dev scripts refuse `--split test`; see "Final test-set results").
 - Metrics: NDCG@10, Recall@100, MRR@10 (own implementation, cross-checked against `pytrec_eval` in tests).
 - Confidence intervals: percentile bootstrap over queries (10,000 resamples, seed 42). Comparisons
   between systems use a **paired** bootstrap on the same queries. The bootstrap p-value has a
@@ -80,7 +80,7 @@ Caveats on these results:
 - Row D changes two things at once (model-mined negatives and a larger, more diverse pool), so this
   ablation cannot say which one helped. Explanations for why BM25 negatives did not help are hypotheses,
   not tested.
-- Dev is not test. No test-set number has been computed.
+- Dev is not test. The test numbers are in "Final test-set results".
 - Training ran on Colab: Tesla T4, torch 2.14.1+cu130, Python 3.13.16, fp16 autocast. Mean epoch
   time: B 128 s, C 177 s, C2 175 s, D 180 s.
   The zero-shot comparison uses the Phase 1 per-query scores (Apple M2); re-evaluating zero-shot on the T4 gave
@@ -157,7 +157,7 @@ Caveats: alpha is chosen on dev (one parameter, so the optimism is small, but th
 estimate), and row D was itself chosen on dev; one training seed; the hybrid run used the checkpoint downloaded
 from Colab (checkpoints are git-ignored) and ran on mps (Apple M2); re-evaluating row D there
 gave NDCG@10 0.4281, against 0.4284 on the T4, a negligible device difference.
-No test-set number has been computed.
+No test-set number had been computed at this point.
 
 ### Cross-encoder reranking (dev, 500 queries): off-the-shelf reranker
 
@@ -215,7 +215,7 @@ deploy on, and the Docker benchmark is still to do (Phases 5 and 6); these numbe
 that ONNX and int8 must beat.
 
 Caveats: one off-the-shelf model, one seed for everything upstream; the hybrid's alpha and row D were chosen on dev;
-no test-set number has been computed. Tuning a blend of reranker and first-stage scores was not tried.
+no test-set number had been computed at this point. Tuning a blend of reranker and first-stage scores was not tried.
 
 ### Fine-tuned reranker (dev): two runs, neither beats the first stage
 
@@ -256,7 +256,7 @@ continue, because this was one planned retry and further tuning against dev woul
 
 **Decision:** a reranker, off-the-shelf or fine-tuned as above, does not improve on the hybrid first stage on this data, so the service will serve retrieval only
 (hybrid BM25 plus fine-tuned bi-encoder) with reranking available as an off-by-default option. Caveats: one seed per run, two runs, best epoch chosen on dev,
-no test number computed.
+no test number computed at this point.
 
 ### Inference optimization: ONNX export, graph fusion and int8 quantization (dev)
 
@@ -535,7 +535,36 @@ characters and results from their first 400. A second pass re-read the 8 least c
 dataset does not include the post. The 19 and 11 are counts in a sample of 30, not estimates for all 150 with any
 precision. Nothing here was used to change the model, and no test-split question was read.
 
-Test-split numbers: *pending (final phase)*.
+## Final test-set results (648 queries, run once)
+
+`scripts/final_test_eval.py` scored four systems on the official test split, one time, after every choice (the
+checkpoint, the hybrid weight of 0.8, and the decision to serve without a reranker) had been made on dev. The script
+refuses to run again while `results/final_test.json` exists. The rerankers were not run on test because they were not
+selected on dev.
+
+| System | NDCG@10 [95% CI] | Recall@100 [95% CI] | MRR@10 [95% CI] | Dev NDCG@10 |
+|---|---|---|---|---|
+| BM25 | 0.233 [0.209, 0.256] | 0.515 [0.484, 0.546] | 0.288 [0.257, 0.319] | 0.231 |
+| all-MiniLM-L6-v2, zero-shot | 0.369 [0.342, 0.396] | 0.706 [0.678, 0.733] | 0.445 [0.412, 0.479] | 0.388 |
+| Fine-tuned bi-encoder (row D) | 0.419 [0.390, 0.448] | 0.745 [0.717, 0.771] | 0.501 [0.467, 0.535] | 0.428 |
+| **Hybrid, BM25 + row D, alpha 0.8 (served)** | **0.432** [0.404, 0.461] | 0.739 [0.712, 0.766] | 0.514 [0.481, 0.549] | 0.444 |
+
+Paired differences on test (same 648 queries, 10,000 bootstrap resamples):
+
+| Comparison | NDCG@10 [95% CI] | Recall@100 [95% CI] | On dev (NDCG@10) |
+|---|---|---|---|
+| Zero-shot MiniLM minus BM25 | +0.136 [+0.111, +0.162] | +0.191 [+0.162, +0.221] | +0.157 |
+| Fine-tuned minus zero-shot | **+0.050 [+0.038, +0.063]** | +0.038 [+0.024, +0.054] | +0.040 |
+| Hybrid minus fine-tuned | **+0.013 [+0.007, +0.021]** | -0.006 [-0.017, +0.006] | +0.016 |
+| Hybrid minus BM25 | +0.200 [+0.176, +0.224] | +0.224 [+0.196, +0.252] | +0.213 |
+
+What held up: the ordering of the four systems is the same as on dev, and both gains this project is responsible for
+(fine-tuning, then fusion) have confidence intervals that exclude zero on test. The hybrid's test score is 0.012 below
+its dev score, as expected for a system whose checkpoint epoch and weight were picked on dev. Hybrid fusion improves the
+top of the ranking (NDCG@10, MRR@10) but not Recall@100, where the difference is not distinguishable from zero.
+
+Limits: one training seed; one test run by design; the zero-shot row carries the contamination caveat above; BM25 here
+is untuned, so the gap to BM25 is against a default baseline.
 
 ## Reproduce
 
@@ -543,6 +572,7 @@ Test-split numbers: *pending (final phase)*.
 uv sync --group dev --group train --group eval
 uv run python scripts/download_data.py
 uv run python scripts/run_baselines.py --split dev      # Phase 1 baselines
+uv run python scripts/final_test_eval.py                # final test run; refuses if results/final_test.json exists
 uv run pytest -q
 ```
 
