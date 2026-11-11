@@ -74,6 +74,15 @@ jobs:
         with:
           path: data/raw
           key: fiqa-raw-v1
+      # The dataset server sometimes refuses connections from CI machines, so try a few times.
+      - name: Download the FiQA dataset (skipped when cached)
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if uv run --no-sync python scripts/download_data.py; then exit 0; fi
+            rm -f data/raw/fiqa.zip  # never keep a partial download
+            echo "attempt $attempt failed, waiting"; sleep $((attempt * 15))
+          done
+          exit 1
       - name: Machine
         run: |
           echo "CPU: $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2), $(nproc) cores" | tee -a "$GITHUB_STEP_SUMMARY"
