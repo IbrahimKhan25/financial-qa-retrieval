@@ -3,7 +3,7 @@
 Fine-tuned retrieval and reranking on BEIR FiQA-2018, with measured quality/latency tradeoffs
 (PyTorch training, ONNX int8 inference, FastAPI serving, CI quality/latency gates).
 
-**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F; Phase 8 (CI gates) runs on every push in GitHub Actions.
+**Status:** Phases 1 to 3 complete on the dev split (baselines, bi-encoder fine-tuning ablation, hybrid retrieval); Phase 4 (reranking) complete: neither the off-the-shelf nor the fine-tuned reranker beats the first stage, so serving is retrieval-only; Phase 5 (ONNX, fusion, int8) measured on an Apple M2 and an Intel i7-9700F; Phase 6 (FastAPI serving) built, checked against the offline scores and load-tested natively on the M2 and inside Docker (4-CPU limit) on the i7-9700F; Phase 8 (CI gates) runs on every push in GitHub Actions; Phase 9 error analysis done on dev (150 of 500 questions have no relevant answer in the top 10; 30 of them read and labelled by cause).
 Test-set numbers are produced once, at the end, by a single script. Every number below comes from a
 committed file in `results/`.
 
@@ -487,6 +487,51 @@ ratio 1.00; a copy with a 3 ms sleep added to every search gave ratio 1.55 and f
 Limits: the latency gate compares each commit only with the one before it, so several small slowdowns in a row can each
 pass; it times single searches in one process, not the HTTP server under load; and the 1.3 limit is a starting value
 that has not yet been tuned against the noise of GitHub's machines. The gates use the dev split only.
+
+## Error analysis (Phase 9, dev)
+
+`scripts/error_analysis.py` → `results/error_analysis_dev.json`. A failure is a question with no labelled relevant
+answer in the top 10 of the served hybrid retriever (NDCG@10 = 0).
+
+**150 of the 500 dev questions fail.** Where the best labelled answer sits for those 150:
+
+| Best labelled answer | Questions |
+|---|---|
+| rank 11 to 20 | 31 |
+| rank 21 to 100 | 53 |
+| not in the top 100 | 66 |
+
+Failed questions have fewer labelled answers (1.71 on average against 2.81 for the rest), so there are fewer chances to
+hit one. Dense alone would have had a hit in the top 10 for 4 of the 150, and BM25 alone for 15: fusion costs a few
+questions, even though it wins overall.
+
+A random 30 of the 150 (seed 0) were read: the question, the labelled answers and the top 3 results. Each got one
+primary cause (`results/error_analysis_dev_labels.json`, with a one-line reason per question):
+
+| Cause | Of 30 |
+|---|---|
+| Labelled answer responds to details in the full question post; the query is only the title | 10 |
+| Top results are reasonable answers that are not labelled (labels cover only answers posted under that question) | 7 |
+| Top results are on the right topic but miss the specific point asked | 7 |
+| Labelled answer gives the advice without using the question's key terms | 4 |
+| BM25 had a relevant answer in its top 3, dense missed it, and the 0.8 dense weight buried it | 2 |
+
+Examples. "Can a F-1 student visa holder loan a car from bmw?": the top results are about car loans for F-1 students,
+and the labelled answer is about dealer financing and cooling-off periods. "How exactly does dealing in stock make me
+money?": the third result says dividends and capital gains, and is not labelled. "Approach to share options in the UK":
+the retriever returned traded options (covered calls), and the labelled answers are about employee options. "Trying to
+understand Return on Capital (Joel Greenblatt's Magic Formula version)": BM25 ranked a labelled answer 3rd on the rare
+terms, dense did not have it in its top 100, and the hybrid put it 44th.
+
+What this says: in 17 of the 30 the result list is hard to call wrong from the query text alone (the first two rows),
+so part of the gap to a perfect score comes from the benchmark, where queries are titles and labels are sparse. The
+other 13 are retrieval mistakes: 7 where the topic was matched but not the point, 4 where the answer shares few words
+with the question, and 2 lost in fusion.
+
+Limits: 30 questions, one reader, one pass, one cause each though some fit two; answers were read from their first 700
+characters and results from their first 400; "responds to the full question post" is inferred from the answer mentioning
+details the title lacks, because the dataset does not include the post. The 17 and 13 are counts in a sample of 30, not
+estimates for all 150 with any precision. Nothing here was used to change the model, and no test-split question was read.
 
 Test-split numbers: *pending (final phase)*.
 

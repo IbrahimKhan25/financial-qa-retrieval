@@ -1,0 +1,1163 @@
+{
+ "summary": {
+  "split": "dev",
+  "system": "hybrid (alpha 0.8), top 100",
+  "n_queries": 500,
+  "n_failed": 150,
+  "failed_by_best_relevant_rank": {
+   "not in top 100": 66,
+   "rank 21-100": 53,
+   "rank 11-20": 31
+  },
+  "failed_but_dense_alone_has_a_hit_in_top10": 4,
+  "failed_but_bm25_alone_has_a_hit_in_top10": 15,
+  "mean_relevant_docs": {
+   "failed": 1.7066666666666668,
+   "not_failed": 2.8057142857142856
+  },
+  "mean_question_words": {
+   "failed": 10.3,
+   "not_failed": 11.251428571428571
+  },
+  "sample_causes": {
+   "body": 10,
+   "aspect": 7,
+   "unlabelled": 7,
+   "vocabulary": 4,
+   "fusion": 2
+  }
+ },
+ "sample_seed": 0,
+ "sample": [
+  {
+   "query_id": "6937",
+   "question": "Are there common stock price trends related to employee option plans?",
+   "best_relevant_rank": {
+    "hybrid": 39,
+    "dense": 38,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "436536",
+     "words": 168,
+     "text": "Whenever a large number of shares to be sold hit the market at the same time the expectation is that the price for each share will drop. The employees in a normal market would be expected to sell some of their shares at the first opportunity. Because during the dot com boom some companies employees were able to become millionaires, every employee at a tech IPO hopes to be richly rewarded. If the long term prospects of the stock price are viewed by the employees as a continuous path up, then the percentage of shares that will hit the market is low. They do want some instant cash, but want the bulk of the shares to capture future growth. The more dismal the long term price lookout is, the grea ..."
+    },
+    {
+     "doc_id": "73321",
+     "words": 257,
+     "text": "The stock market is generally a long term investment platform. The share prices reflect more the companies potential to be profitable in the future rather than its actual value. Companies that have good potential can over perform their actual value. We saw this regularly in the early days of the internet prior to the .com bust. Companies would go up exponentially based on their idea's and potential. Investors learned from that and are demanding more these days. As a result companies that do not show growth potential go down. Companies that show growth and potential (apple and google for 2 easy examples) continue to go up. Many companies have specific days where employees can buy and sell sto ..."
+    },
+    {
+     "doc_id": "481339",
+     "words": 229,
+     "text": "There's an odd anomaly that often occurs with shares acquired through company plans via ESPP or option purchase. The general situation is that the share value above strike price or grant price may become ordinary income, but a sale below the price at day the shares are valued is a capital loss. e.g. in an ESPP offering, I have a $10 purchase price, but at the end of the offering, the shares are valued at $100. Unless I hold the shares for an additional year, the sale price contains ordinary W2 income. So, if I see the shares falling and sell for $50, I have a tax bill for $90 of W2 income, but a $50 capital loss. Tax is due on $90 (and for 1K shares, $90,000 which can be a $30K hit) but that ..."
+    },
+    {
+     "doc_id": "337049",
+     "words": 154,
+     "text": "Say I am an employee of Facebook and I will be able to sell stares at enough of a profit to pay of my mortgage and have enough money left to cover my living costs for many years. I also believe that there is a 95% chance that the stock price will go up in the next few years. Do I take a 5% risk, when I can transform my life without taking any risk? (The USA tax system as explained by JoeTaxpayer increases the risk.) So you have a person being very logical and selling stocks that they believe will go up in value by more than any other investment they could have. It is called risk control. (Lot of people will know the above; therefore some people will delay buying stock until Lock Up expiratio ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "220147",
+     "text": "Options granted by an employer to an employee are generally different that the standardized options that are traded on public stock option exchanges. They may or may not have somewhat comparable terms, but generally the terms are fairly different. As a holder of an expiring employee option, you can only choose to exercise it by paying the specified price and receiving the shares, or not. It is com ..."
+    },
+    {
+     "doc_id": "461130",
+     "text": "There are a LOT of variables at play here, so with the info you've provided we can't give you an exact answer. Generally speaking, employee options at a startup are valued by a 409a valuation (http://en.wikipedia.org/wiki/Internal_Revenue_Code_section_409A) once a year or more often. But it's entirely possible that the company split, or took a round of funding that reduced their valuation, or any  ..."
+    },
+    {
+     "doc_id": "90085",
+     "text": "Employee Stock Purchase Plans (ESPPs) were heavily neutered by U.S. tax laws a few years ago, and many companies have cut them way back. While discounts of 15% were common a decade ago, now a company can only offer negligible discounts of 5% or less (tax free), and you can just as easily get that from fluctuations in the market. These are the features to look for to determine if the ESPP is even w ..."
+    }
+   ],
+   "cause": "aspect",
+   "cause_note": "Top results cover employee options in general, not their effect on the share price"
+  },
+  {
+   "query_id": "7294",
+   "question": "Direct access to the currency exchange market",
+   "best_relevant_rank": {
+    "hybrid": 21,
+    "dense": 25,
+    "bm25": 30
+   },
+   "relevant": [
+    {
+     "doc_id": "10726",
+     "words": 281,
+     "text": "Is my observation that the currency exchange market is indirect correct? Is there a particular reason for this? Why isn't currency traded like stocks? I guess yes. In Stocks its pretty simple where the stock is held with a depository. Hence listing matching is simple and the exchange of money is via local clearing. Currency markets are more global and there is no one place where trades happen. There are multiple places where it happens and is loosely called Fx market place. Building a matching engine is also complex and confusing. If we go with your example of currency pair, matches would be difficult. Say; If we were to say all transactions happen in USD say, and list every currency as item ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "429460",
+     "text": "Many people trade the currency markets via brokers who have developed online apps with live forex prices and many currency pairs. You can trade on your phone, iPad or PC / Mac."
+    },
+    {
+     "doc_id": "311834",
+     "text": "Some brokerages will let you withdraw/deposit in multiple jurisdictions. e.g. I used to use Interactive Brokers. I could deposit/withdraw to US and UK bank accounts, in the appropriate currencies. It helps to have a brokerage that provides good rates on forex exchange also, and they were very good on the bid/ask spread. It was possible to get interbank rates plus a very low commission."
+    },
+    {
+     "doc_id": "234851",
+     "text": "You can use interactive brokers. It allows you to have a single account to trade stocks and currencies from several countries."
+    }
+   ],
+   "cause": "unlabelled",
+   "cause_note": "Top results explain trading currencies through brokers; relevant answer at rank 21"
+  },
+  {
+   "query_id": "1107",
+   "question": "What are stock indexed funds and how do they lower taxes?",
+   "best_relevant_rank": {
+    "hybrid": 37,
+    "dense": null,
+    "bm25": 2
+   },
+   "relevant": [
+    {
+     "doc_id": "330890",
+     "words": 326,
+     "text": "\"who computes the S&P 500? Standard and Poor's. Why are they sharing this information and Because that's what they do. This is a financial research company. how do they recuperate the costs inherent in computing the S&P 500? By charging clients for other information. The computing of the index itself is not all that complicated, its coming up with the index that's a problem. Once they've come up with the formula, and it became widely accepted, the computation itself is not an issue. But the fact that its so popular leads to the S&P brand recognition, and people come and pay good money for their other services (ratings and financial analysis of securities). They do more work for free. For exa ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "298350",
+     "text": "\"Index funds may invest either in index components directly or in other instruments (like ETFs, index options, futures, etc.) which are highly correlated with the index. The specific fund prospectus or description on any decent financial site should contain these details. Index funds are not actively managed, but that does not mean they aren't managed at all - if index changes and the fund include ..."
+    },
+    {
+     "doc_id": "498597",
+     "text": "An index fund is just copying the definition of an index. The group that defines the index determines how to weight the different parts of the index. The index fund just makes sure they invest the same way the index creator wants. Think of a non-investment scenario. A teacher can grade tests, quizzes, homework, in-class assignments, research papers. They decide how much weight to give each categor ..."
+    },
+    {
+     "doc_id": "520963",
+     "text": "\"Your bank's fund is not an index fund. From your link: To provide a balanced portfolio of primarily Canadian securities that produce income and capital appreciation by investing primarily in Canadian money market instruments, debt securities and common and preferred shares. This is a very broad actively managed fund. Compare this to the investment objective listed for Vanguard's VOO: Invests in s ..."
+    }
+   ],
+   "cause": "fusion",
+   "cause_note": "BM25 rank 2, dense not in top 100, hybrid rank 37; top results define index funds"
+  },
+  {
+   "query_id": "5337",
+   "question": "Can a F-1 student visa holder loan a car from bmw?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "566382",
+     "words": 219,
+     "text": "Most states do have a cooling-off period where the buyer can rescind the purchase as well as a legally allowed limit to how long the dealer has to secure financing when they buyer has opted for dealer-financing. If the dealer did inform you during the allowed window, they will refund your down payment minus mileage fees at a state set cost per mile that you used the car. If the dealer did not inform you during the allowed window, depending on the state, they may have to refund the entire down payment. In any case, the problem is that the bank does not want to offer you the loan, you can try to negotiate and have the dealer use what leverage they have to coerce the bank, but there is probably ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "571295",
+     "text": "\"You have figured out most of the answers for yourself and there is not much more that can be said. From a lender's viewpoint, non-immigrant students applying for car loans are not very good risks because they are going to graduate in a short time (maybe less than the loan duration which is typically three years or more) and thus may well be leaving the country before the loan is fully paid off. I ..."
+    },
+    {
+     "doc_id": "95189",
+     "text": "I don't think that they ask you for your citizenship status when you apply in a dealership. At least I don't remember being asked. I know of at least 3 people from my closest circle of friends who are in various immigration statuses (including one on F1) and got an auto loan from a dealership without a problem and with good rates. They have to ask for your immigration status on online applications ..."
+    },
+    {
+     "doc_id": "256857",
+     "text": "Buying this car would be a good idea because you will quickly learn why you feel you need a BMW (that you cannot afford). This is not an investment, but a financing decision, beyond your means of living. As a future MBA you will regret not investing this money now."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Top results answer car loans for F-1 students directly; labelled answer is about dealer financing and cooling-off periods"
+  },
+  {
+   "query_id": "8088",
+   "question": "Beginner questions about stock market",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "427472",
+     "words": 253,
+     "text": "First, welcome to Money.SE. If you are interested in saving and investing, this is a great site to visit. Please take the tour and just start to read the questions you find interesting. 1 - even though this is hypothetical, it scales down to an average investor. If I own 1000 shares of the 1 billion, am I liable if the company goes under? No. Stocks don't work that way. If all I have is shares, not a short position, not options, I can only see my investment go to zero. 2 - Here, I'd ask that you edit your country in the tags. I can tell you that my newborn (who is soon turning 17) had a stock account in her name when she was a few months old. It's still a custodian account, meaning an adult  ..."
+    },
+    {
+     "doc_id": "564197",
+     "words": 69,
+     "text": "In the US, and I suspect in most of the developed world, one major point of a corporation is limited liability. The stockholders are not on the hook for liabilities beyond their investment. If the company does something terrible, or fails economically, it goes bankrupt. Usually the stockholders have their investment wiped out, but they are guaranteed that they do not have to pay more in to any settlement."
+    },
+    {
+     "doc_id": "175879",
+     "words": 147,
+     "text": "1st question: If I bought 1 percent share of company X, but unfortunately it closed down because of some reason as it was 1 million in debt. Since I had 1 percent of it shares, does it mean I also have to pay the 1 percent of it's debt? Stock holders are not liable for anything more than their current holdings. In cases of Ch11 bankruptcy stock holders usually get nothing. In Ch7 the holdings will be severely hit but one may get 10% of pre-bk prices. I would strongly recommend against investing in bankrupt companies. A seasoned trader can make plenty off short term trades. The payoff structure is usually: 2nd question: Is there an age requirements to enter the stock market? I am 15 years old ..."
+    },
+    {
+     "doc_id": "265948",
+     "words": 83,
+     "text": "If I bought 1 percent share of company X, Most countries company X, is treated as a separate legal entity than individual. So max loss is what you have invested. However certain types of companies, generally called partnerships are not separate entities and you have to pay back the said loss. However such companies are not traded on stock exchanges. Is there an age requirements to enter the stock market? Depends on country. Generally a minor can hold an account with a guardian."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "201884",
+     "text": "A couple of good books I enjoyed and found very understandable (regarding the stock market): As for investment information you can get lost for days in Investopedia. Start in the stock section and click around. The tutorials here (free) give a good introduction to different financial topics. Regarding theoretical knowledge: start with what you know well, like your career or your other interests. Y ..."
+    },
+    {
+     "doc_id": "259081",
+     "text": "\"It is great that you want to learn more about the Stock Market. I'm curious about the quantitative side of analyzing stocks and other financial instruments. Does anyone have a recommendation where should I start? Which books should I read, or which courses or videos should I watch? Do I need some basic prerequisites such as statistics or macro and microeconomics? Or should I be advanced in those  ..."
+    },
+    {
+     "doc_id": "436948",
+     "text": "I'm going to be a bit off topic and recommend 'The Only Investment Book You'll Ever Need' by Andrew Tobias. It doesn't start with describe the workings of the stock market. Instead, it starts with making sure you have a budget and have your basic finances in order BEFORE going into the stock market. This may not sound like what you are looking for, but it really is a valuable book to read, even if ..."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Title is 'Beginner questions about stock market'; labelled answers are about shareholder liability"
+  },
+  {
+   "query_id": "7975",
+   "question": "Approach to share options in the UK",
+   "best_relevant_rank": {
+    "hybrid": 87,
+    "dense": 75,
+    "bm25": 95
+   },
+   "relevant": [
+    {
+     "doc_id": "259560",
+     "words": 238,
+     "text": "\"I'm in the US, so there may be idiosyncrasies with UK taxes that I'm not familiar with, but here's how I've always treated stock I get as compensation. Suppose the vested shares are worth X. If I had X in cash, would I buy my company's stock as an investment? Usually the answer is no, not because I think the stock will tank, but because there's better things I can do with that cash (pay off debt, unfortunately). Therefore I sell the shares and use the cash for something else. You have stock options. So suppose the stock value is X but you can buy it for Y. You can either: Therefore, the math is the same. If you had X in cash, would you buy your company's stock as an investment? If so, then  ..."
+    },
+    {
+     "doc_id": "340730",
+     "words": 387,
+     "text": "When your options vest, you will have the option to buy your company's stock at a particular price (the strike price). A big part of the value of the option is the difference between the price that your company's stock is trading at, and the strike price of the option. If the price of the company stock in the market is lower than the strike price of the option, they are almost worthless. I say 'almost' because there is still the possibility that the stock price could go up before the options expire. If your company is big enough that their stock is not only listed on an exchange, but there is an active options market in your company's stock, you could get a feel for what they are worth by se ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "170700",
+     "text": "\"There are a number of strategies using options and shares together. One that sells large potential upside gains to assure more consistent medium returns is to \"\"write covered calls\"\". This fairly conservative and is a reasonable entry point into options for an individual investor. Deeper dive into covered calls\""
+    },
+    {
+     "doc_id": "341455",
+     "text": "The other answers are good, but not UK-specific. You need to look for an Independent Financial Advisor (IFA). These are regulated by the FCA and you pay them a time-based fee for their services, they do not take commission on the products they recommend to you. The Government Money Advice Service page (hat tip to @AndyT in the comments on the question for the link) tells you how to go about findin ..."
+    },
+    {
+     "doc_id": "442968",
+     "text": "I know a guy on a much higher rate than me, about \u00a3500 per day, and he claims to pay around 18% tax which has me bewildered He will be showing expenses, which are deductible. Check with your accountant about expenses, which can be legally claimed as expenses. This is the main benefit of operating through a limited company. Legtimate business expenses can be claimed, which you cannot do if you are  ..."
+    }
+   ],
+   "cause": "aspect",
+   "cause_note": "Retriever read 'share options' as traded options (covered calls); labelled answers are about employee options"
+  },
+  {
+   "query_id": "7202",
+   "question": "How to manage currency risk in international investing",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "565417",
+     "words": 65,
+     "text": "Let's make a few assumptions: You have several ways of achieving (almost) that, in ascending complexity: Note that each alternative will have a cost which can be small (forwards, futures) or large (CFDs, debit) and the hedge will never be perfect, but you can get close. You will also need to decide whether you hedge the unrealised P&L on the position and at what frequency."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "66119",
+     "text": "How can I calculate my currency risk exposure? You own securities that are priced in dollars, so your currency risk is the amount (all else being equal) that your portfolio drops if the dollar depreciates relative to the Euro between now and the time that you plan to cash out your investments. Not all stocks, though, have a high correlation relative to the dollar. Many US companies (e.g. Apple) do ..."
+    },
+    {
+     "doc_id": "169847",
+     "text": "The bad news is that foreign exchange is ultimately somewhat unpredictable, and analyzing the risk of these things is not particularly straightforward. I'm afraid I don't know what tools exist to analyze these, aside from suggesting you look at textbooks for financial analysis classes. The good news is that there are other people who deal with multiple currencies (international businesses, for ins ..."
+    },
+    {
+     "doc_id": "205685",
+     "text": "In general, to someone in a similar circumstance I might suggest that the lowest-risk option is to immediately convert your excess currency into the currency you will be spending. Note that 'risk' here refers only to the variance in possible outcomes. By converting to EUR now (assuming you are moving to an EU country using the EUR), you eliminate the chance that the GBP will weaken. But you also e ..."
+    }
+   ],
+   "cause": "unlabelled",
+   "cause_note": "Top results discuss currency risk directly; the labelled answer is a 65-word fragment whose list was lost"
+  },
+  {
+   "query_id": "5836",
+   "question": "Why have candlestick charts overlaps?",
+   "best_relevant_rank": {
+    "hybrid": 16,
+    "dense": 11,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "13511",
+     "words": 151,
+     "text": "Remember that prices refer to discrete events in the market - trades - it is easily possible that the highest price for a trade in the next period is lower than the highest price in the current one as someone in the current period may be willing to pay more in this period than anyone in the next. The ending price of a period is also determined this way; it is the last price that someone was willing to pay in this period not the first price that someone will pay in the next period. Why? because the last price in this period is not in the next period by definition! edit: added something on illiquid stocks Illiquid stocks may have intraday gaps in the sequence of candlesticks where no trading o ..."
+    },
+    {
+     "doc_id": "590693",
+     "words": 110,
+     "text": "The market is simply gapping at these times, some news may have come out that makes the market gap on the open from its previous close. Being FX, the market in one country might be trading and then at the start of the hour trading in a different country may commence, causing a small gap in price. Generally many things could cause the price to gap up or down, and these gaps sometime can occur at the start of a new hour or other timeframe you are using. They do tend to happen more often at the start of a new day's trading on a daily chart, especially with stocks."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "58882",
+     "text": "\"Each candlestick in a candlestick chart represents the open, close, high and low for a period of time. If you are looking at a daily chart it represents the open price, close price, high price and low price for that day. If you are looking at an hourly chart, then a single candlestick represents the open, close, high and low prices for an hour. If looking at a weekly chart, then a single candlest ..."
+    },
+    {
+     "doc_id": "15504",
+     "text": "There's no rule of thumb but the purpose of candlesticks of any kind (fixed, volume weighted etc.) is to display the intra-period price action. So if you'd fit 3 years worth of 1 minute bars on a chart, candlesticks become useless and you might as well use a line chart."
+    },
+    {
+     "doc_id": "291006",
+     "text": "Candlesticks and TA are a relic of pre-computer trading, period. Market makers use sophisticated algorithms not for trading, but manipulations."
+    }
+   ],
+   "cause": "aspect",
+   "cause_note": "Top results explain candlestick charts, not why candles overlap or gap; relevant at rank 16"
+  },
+  {
+   "query_id": "7881",
+   "question": "Direct Registration System vs Brokerage Firm",
+   "best_relevant_rank": {
+    "hybrid": 30,
+    "dense": 49,
+    "bm25": 19
+   },
+   "relevant": [
+    {
+     "doc_id": "168001",
+     "words": 186,
+     "text": "You'll need to talk to your broker about registering positions you already hold. I would personally expect this will cost you a not-insignificant fee. And I don't think you'll be able to do this on any shares held in a tax-advantaged account. That said, I'd recommend you go to the Investors sections of the company's website in question. This will usually tell you who the registrar of the company's stock is, and if they offer any direct-purchase, or DRIP, programs. You should find out from these contacts and program details how the direct program works and what it's costs are. I suspect, but have no firsthand knowledge that this will be true, that you'll end up with lower costs if you just se ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "127527",
+     "text": "Some good answers already, but let me add a TL:DR version. Brokers work like a special type of bank account where you can deposit or withdraw money. The major difference is that they also give you the ability to buy/sell investments with the money in your account which you can do by either calling them or using their website. Important: Many investments you will make through a broker(e.g. stocks)  ..."
+    },
+    {
+     "doc_id": "340947",
+     "text": "The brokerage executes the transactions you tell them to make on your behalf. Other than acting as your agent for those, and maintaining your account, and charging a fee for the service, they have no involvement -- they do not attempt to predict optimal anything, or hold any assets themselves."
+    },
+    {
+     "doc_id": "593445",
+     "text": "\"Brokerages offer you the convenience of buying and selling financial products. They are usually not exchanges themselves, but they can be. Typically there is an exchange and the broker sends orders to that exchange. The main benefit that brokers offer is a simpler commission structure. Not all brokers have their own liquidity, but brokers can have their own allotment of shares of a stock, for exa ..."
+    }
+   ],
+   "cause": "aspect",
+   "cause_note": "Top results explain what brokerages do; nothing on direct registration"
+  },
+  {
+   "query_id": "668",
+   "question": "Receiving important daily wires from abroad?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "148589",
+     "words": 94,
+     "text": "You can receive all the Money in your Bank. By Problem if you mean whether it will raise any alarms at the Bank. Most likely yes, such kind of activity would trigger AML. Bank would flag this off to regulators and questions would be asked. If you are doing a Legitimate business, its not an issue. Maintain a proper record of the transaction and pay your taxes. As funds are large 80 K a month, it makes sense to seek to advice of a Laywer and CA to help you keep thing in order."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "549375",
+     "text": "Check out CitiGold from Citibank. Not sure about incoming international wires but everything else seems to be covered."
+    },
+    {
+     "doc_id": "508670",
+     "text": "International wires using SWIFT are reliable way of getting funds. The issue could be because you are not giving the right details to your counterparty. Any incorrect details on wires would get it rejected. The timelines typically would be around 2-4 days depending on various things. There are alternatives like getting a paper check mailed to you and you cash it [this takes more time] or depending ..."
+    },
+    {
+     "doc_id": "467647",
+     "text": "All the items listed are required for International Wire transfer. In wrong hands this info along with other info can cause issues. Most of the times you trust the person with this info and hence is less cause to worry. So the key is if you don't trust, don't give the details. Use alternatives like; Best open an account for receiving funds. Share the details, once the funds are received move it to ..."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Labelled answer is about anti-money-laundering flags on large monthly amounts, a detail not in the title"
+  },
+  {
+   "query_id": "5027",
+   "question": "valuing options",
+   "best_relevant_rank": {
+    "hybrid": 36,
+    "dense": 35,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "409190",
+     "words": 789,
+     "text": "\"Below I will try to explain two most common Binomial Option Pricing Models (BOPM) used. First of all, BOPM splits time to expiry into N equal sub-periods and assumes that in each period the underlying security price may rise or fall by a known proportion, so the value of an option in any sub-period is a function of its possible values in the following sub period. Therefore the current value of an option is found by working backwards from expiry date through sub-periods to current time. There is not enough information in the question from your textbook so we may assume that what you are asked to do is to find a value of a call option using just a Single Period BOPM. Here are two ways of doin ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "328794",
+     "text": "\"There are two components of option valuation, the value that's \"\"in the money\"\" and the \"\"time value.\"\" In the case of the $395 put, that option was already in the money and it will move less than the stock price by a bit as there will still be some time value there. $22.52 is intrinsic value (the right word for 'in the money') and the rest is time. The $365 strike is still out of the money, but  ..."
+    },
+    {
+     "doc_id": "535605",
+     "text": "You have a lot of different questions in your post - I am only responding to the request for how to value the ESPP. When valuing an ESPP, don't think about what you might sell the shares for in the future, think about what the market would charge you for that option today. In general, an option is worth much less than the underlying share itself. For the simplest example, assume you work at a publ ..."
+    },
+    {
+     "doc_id": "591229",
+     "text": "I would make a change to the answer from olchauvin: If you buy a call, that's because you expect that the value of call options will go up. So if you still think that options prices will go up, then a sell-off in the stock may be a good point to buy more calls for cheaper. It would be your call at that point (no pun intended). Here is some theory which may help. An options trader in a bank would s ..."
+    }
+   ],
+   "cause": "unlabelled",
+   "cause_note": "Two-word query 'valuing options'; top results are option valuation answers, labelled one is a 789-word binomial model walkthrough"
+  },
+  {
+   "query_id": "806",
+   "question": "Trying to understand Return on Capital (Joel Greenblatt's Magic Formula version)",
+   "best_relevant_rank": {
+    "hybrid": 44,
+    "dense": null,
+    "bm25": 3
+   },
+   "relevant": [
+    {
+     "doc_id": "559363",
+     "words": 302,
+     "text": "I've spent enough time researching this question where I feel comfortable enough providing an answer. I'll start with the high level fundamentals and work my way down to the specific question that I had. So point #5 is really the starting point for my answer. We want to find companies that are investing their money. A good company should be reinvesting most of its excess assets so that it can make more money off of them. If a company has too much working capital, then it is not being efficiently reinvested. That explains why excess working capital can have a negative impact on Return on Capital. But what about the fact that current liabilities in excess of current assets has a positive impac ..."
+    },
+    {
+     "doc_id": "557607",
+     "words": 123,
+     "text": "Just to clarify things: The Net Working Capital is the funds, the capital that will finance the everyday, the short term, operations of a company like buying raw materials, paying wages erc. So, Net Working Capital doesn't have a negative impact. And you should not see the liabilities as beneficial per se. It's rather the fact that with smaller capital to finance the short term operations the company is able to make this EBIT. You can see it as the efficiency of the company, the smaller the net working capital the more efficient the company is (given the EBIT). I hope you find it helpful, it's my first amswer here. Edit: why do you say the net working capital has a negative impact?"
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "443689",
+     "text": "\"The author is using an approximation to what you have exactly, which is called a \"\"true\"\" time-weighted rate of return. You have expressed the total time-weighted return for the period in question. In order to express this as an annual rate, you may annualize it by adding one, raising to the 1/y power, and subtracting one again, for a period of y years. The alternative to a time-weighted return i ..."
+    },
+    {
+     "doc_id": "438547",
+     "text": "There are many ways to calculate the return, and every way will give you a different results in terms of a percentage-value. One way to always get something meaningful - count the cash. You had 977 (+ 31) and in the end you have 1.370, which means you have earned 363 dollars. But what is your return in terms of percentage? One way to look at it, is by pretending that it is a fund in which you inve ..."
+    },
+    {
+     "doc_id": "583913",
+     "text": "\"Month to date For the month to date (MTD), the price on Feb 28th is $4.58 and the price on March 16th is $4.61 so the return is which can be written more simply as The position is 1000 shares valued at $4580 on Feb 28th, so the profit on the month to date is Calendar year to date For the calendar year to date (YTD), the price on Dec 31st is $4.60 and the price on Feb 28th is $4.58 so the return t ..."
+    }
+   ],
+   "cause": "fusion",
+   "cause_note": "BM25 rank 3 on the rare terms, dense not in top 100, hybrid rank 44; dense returned rate-of-return calculations"
+  },
+  {
+   "query_id": "3312",
+   "question": "Why can't I withdraw the $57 in my account?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "91804",
+     "words": 99,
+     "text": "Is there a debit card accessing this account? When you spend money on a debit card for certain item, including, but not limited to gas, restaurant, hotel, a bit extra is held in reserve. For example, a $100 restaurant charge might hold $125, to allow for a tip. (You're a generous tipper, right?) The actual sales slips my take days to reconcile. It's for this reason that I've remarked how credit cards have their place. Using debit cards requires that one have more in their account than they need to spend, especially when taking a trip including hotel costs."
+    },
+    {
+     "doc_id": "209718",
+     "words": 225,
+     "text": "Given you mention a check clearing, in addition to debit card holds as JoeTaxpayer notes, you may also have funds that are on hold for that reason. While the bank may have stated it would be a one day hold, some banks may mean business days (Monday-Friday), and so it will become available on Monday. This is because checks are not always instantly withdrawn from the other account (although this is becoming much more common post-electronic check reform), so the bank wants to make sure it actually is getting the money from the check; after all, if the check you deposited bounces, the bank doesn't want to end up footing the bill. The bank allows you some portion up front, largely as a customer s ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "28991",
+     "text": "Legally, no one else can withdraw from your account. If you suspect the direct-deposit websites are making withdrawals, you can monitor your account balance and dispute any transactions that were not made by you. But realistically, any company that did that would soon be out of business and in so much legal trouble that it wouldn't be worth the money they could get from you."
+    },
+    {
+     "doc_id": "524313",
+     "text": "This happened to me in the mid 90's. I wanted to withdraw enough cash from my account to buy a new car and they nearly panicked. I took a bank draft instead. I discovered afterward that they can require up to a week's notice for any withdrawl."
+    },
+    {
+     "doc_id": "527340",
+     "text": "I'd say it's a limitation of your bank. Every bank I've ever used had instant transfers between accounts at the same bank."
+    }
+   ],
+   "cause": "vocabulary",
+   "cause_note": "Labelled answers explain debit card and cheque holds; they barely mention withdrawing"
+  },
+  {
+   "query_id": "5588",
+   "question": "Estimate probability distribution of profit on investment",
+   "best_relevant_rank": {
+    "hybrid": 51,
+    "dense": 62,
+    "bm25": 28
+   },
+   "relevant": [
+    {
+     "doc_id": "207368",
+     "words": 115,
+     "text": "\"There is no simple answer to that, because no one knows exactly what the probability distribution of S&P 500 returns is. Here is a sketch of one possible way to proceed. Don't forget step 4! The problem is that the stock market is full of surprises, so this kind of \"\"backtesting\"\" can only reliably tell you about what already happened, not what will happen in the future. People argue about how much you can learn from this kind of analysis. However, it is at the least a clearly defined and objective process. I wouldn't advise investing your whole nest egg in anything based just on this, but I do think that it is relevant information.\""
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "170652",
+     "text": "\"(Value of shares+Dividends received)/(Initial investment) would be the typical formula though this is more of a percentage where 1 would indicate that you broke even, assuming no inflation to be factored. No, you don't have to estimate the share price based on revenues as I would question how well did anyone estimate what kind of revenues Facebook, Apple, or Google have had and will have. To esti ..."
+    },
+    {
+     "doc_id": "510323",
+     "text": "Ah, pardon me, so it's not *either* 10x return or zero, but also includes points in between there? Is it path dependent? Do you have any history on the asset? The usual crutches for dealing with unknown probabilities are using risk neutrality or arbitrage pricing, but if the market is inefficient then that will be an estimation at best."
+    },
+    {
+     "doc_id": "559768",
+     "text": "\"What you are seeking is termed \"\"Alpha\"\", the mispricing in the market. Specifically, Alpha is the price error when compared to the market return and beta of the stock. Modern portfolio theory suggests that a portfolio with good Alpha will maximize profits for a given risk tolerance. The efficient market hypotheses suggests that Alpha is always zero. The EMH also suggests that taxes, human effort ..."
+    }
+   ],
+   "cause": "aspect",
+   "cause_note": "Top results give return formulas; labelled answer is about estimating a distribution from history"
+  },
+  {
+   "query_id": "868",
+   "question": "Employer no longer withholds, how do I self administer 401k",
+   "best_relevant_rank": {
+    "hybrid": 89,
+    "dense": null,
+    "bm25": 19
+   },
+   "relevant": [
+    {
+     "doc_id": "408724",
+     "words": 38,
+     "text": "You can't be doing it yourself. Only your employer can do it. If the employer doesn't provide the option - switch employers. The only way for you to do it yourself is if you're the employer, i.e.: self-employed."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "217425",
+     "text": "The Employee Benefits Security Administration within the US Department of Labor is tasked with keeping track of pension and 401K programs. The even have a website to search for abandoned plans: it helps participants and others find out whether a particular plan is in the process of being, or has been, terminated and the name of the Qualified Termination Administrator (QTA) responsible for the term ..."
+    },
+    {
+     "doc_id": "402046",
+     "text": "Ending up with nothing is an unlikely situation unless you invest 100% in a company stock and the company goes under. In order to give you a good answer we need to see what options your employer gives for 401k investments. The best advice would be to take a list of all options that your employer allows and talk with a financial advisor. Here are a few options that you may or may not have as an opt ..."
+    },
+    {
+     "doc_id": "591168",
+     "text": "\"You have a few options: Option #1 - Leave the money where it is If your balance is over $5k - you should be able to leave the money in your former-employer's 401(k). The money will stay there and continue to be invested in the funds that you elect to invest in. You should at the very least be receiving quarterly statements for the account. Even better - you should have access to some type of an o ..."
+    }
+   ],
+   "cause": "vocabulary",
+   "cause_note": "Labelled answer is 38 words and never says '401k' or 'withhold'"
+  },
+  {
+   "query_id": "2062",
+   "question": "How would I use Google Finance to find financial data about LinkedIn & its stock?",
+   "best_relevant_rank": {
+    "hybrid": 15,
+    "dense": 27,
+    "bm25": 16
+   },
+   "relevant": [
+    {
+     "doc_id": "468087",
+     "words": 131,
+     "text": "Your analysis is correct. The income statement from Google states that LinkedIn made $3.4 million in 2010 - the same number you backed into by using the P/E ratio. As you point out, the company seems overvalued compared to other mature companies. There are companies, however, that posts losses and still trade on exchanges for years. How should these companies be valued? As other posters have pointed out there are many different ways to value a company. Some investors may be speculating on substantial growth. Others may be speculating on IPO hype. Amazon did not make a profit until 2003. Its stock had been around for years before that and even split many times. If you bought the stock in 1998 ..."
+    },
+    {
+     "doc_id": "131453",
+     "words": 345,
+     "text": "The most likely answer to your question regarding what the 'market expects' is perhaps that the market expects that currently Linked-In like a lot of other startups has been plunging almost eveything it makes into building the business and brand. So right now the net profits are pretty low percentage of income (roughly 1.5% of revenue) Given the size of the other numbers, it doesn't take a lot of movement in the right direction to get a big change in that tiny final number. The other factor is the gap between their Net and the Income Available.. I think (but I'm making a logical guess here) a large part of that gap was paying off the losses of the prior two years. If that's the case, and eve ..."
+    },
+    {
+     "doc_id": "150535",
+     "words": 34,
+     "text": "It's been traded publicly for only about a month. I wouldn't put much credence in a P/E ratio just yet because it hasn't had to report anything like a grown-up publicly traded company yet."
+    },
+    {
+     "doc_id": "94792",
+     "words": 64,
+     "text": "\"Remember that \"\"earned\"\" means \"\"earned in profit.\"\" A company like LinkedIn may not be trying to earn any profit, because they believe that they are at the stage in their development where the best thing to do with excess cash is to reinvest it in growing the business. Therefore, profit may not be the best metric at this stage in the company's life cycle.\""
+    },
+    {
+     "doc_id": "5054",
+     "words": 56,
+     "text": "When fundamentals such as P/E make a stock look overpriced, analysts often point to other metrics. The PEG ratio, for example, can be applied to cast growth companies in a better light. Fundamental analysis is highly subjective. For further discussion on the pitfalls of fundamentals, I suggest A Random Walk Down Wall Street by Burton Malkiel."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "3669",
+     "text": "Google Finance gives you this information."
+    },
+    {
+     "doc_id": "376396",
+     "text": "I dont know if this data is available for the 1980s, but this response to an old question of mine discusses how you can pull stock related information from google or yahoo finance over a certain period of time. You could do this in excel or google spreadsheet and see if you could get the data you're looking for. Quote from old post: Google Docs spreadsheets have a function for filling in stock and ..."
+    },
+    {
+     "doc_id": "75112",
+     "text": "TSP.Ninja http://www.tsp.ninja has all the TSP funds with good visualizations that are very similar to Google Finance."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Top result matches 'Google Finance' literally; labelled answers discuss LinkedIn's P/E from the question post"
+  },
+  {
+   "query_id": "5235",
+   "question": "Leasing a car I intend to buy",
+   "best_relevant_rank": {
+    "hybrid": 41,
+    "dense": 36,
+    "bm25": 59
+   },
+   "relevant": [
+    {
+     "doc_id": "205098",
+     "words": 204,
+     "text": "\"You are still paying a heavy price for the 'instant gratification' of driving (renting) a brand-new car that you will not own at the end of the terms. It is not a good idea in your case, since this luxury expense sounds like a large amount of money for you. Edited to better answer question The most cost effective solution: Purchase a $2000 car now. Place the $300/mo payment aside for 3 years. Then, go buy a similar car that is 3 years old. You will have almost $10k in cash and probably will need minimal, if any, financing. Same as this answer from Pete: https://money.stackexchange.com/a/63079/40014 Does this plan seem like a reasonable way to proceed, or a big mistake? \"\"Reasonable\"\" is wha ..."
+    },
+    {
+     "doc_id": "100124",
+     "words": 109,
+     "text": "What does not seem reasonable about your plan is the payment and buyout. While $200/month payments are possible (but hard to find), buyouts are more typically in the five figure range. Given that your savings and desired payment for a car is low (the average car payment today is about 450/month), can you really afford the massive depreciation of a late model vehicle? Why not purchase a 2000 car now, and save the 200-300 per month? In about a year you could move up to a ~5000 car. You can buy a pretty nice car for 5K. Myself, I am on my third year of driving a 4000 car."
+    },
+    {
+     "doc_id": "386996",
+     "words": 316,
+     "text": "I have a colleague who always leases cars first. He's very well off, has piles of money in savings, owns a home, and the cherry on top, he could just write a check for the car.... He sees the lease as an insurance policy on the first couple of years of the car's life. If it gets in an accident or he finds something about it he doesn't like, he can give it back to the dealer at the end of the term with no hassle and move on to the next car. Some people value the fact that a lease is a rental. If you're leasing a luxury car or something you couldn't otherwise afford, no amount of mental gymnastics will turn this in to a good idea. Separately, you should never make a down payment on a lease. If ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "386151",
+     "text": "Leasing is never a good idea. A car is a depreciating asset -- it loses money over time. Pay cash for your car and buy used ones until your net worth reaches at least $1M."
+    },
+    {
+     "doc_id": "427884",
+     "text": "Leasing is not exactly a scam, but it doesn't seem to be the right product for you. The point of leasing over buying is that it turns the capital purchase of a car which needs to be depreciated for tax purposes into what is effectively a rental expense. Rent is an expense that can be deducted directly without depreciation. If you are not operating a business where you can take advantage of leasing ..."
+    },
+    {
+     "doc_id": "265904",
+     "text": "Rule of thumb is always BUY, NEVER lease, unless you plan to use it for a business where you can expense the lease payments. Leasing is the biggest scam. Lease is just a fancy word for renting and the dealerships PRAY that people like us lease. As for new or old, new cars have better warranty but you may get a great deal on a 1-3 year old used car."
+    }
+   ],
+   "cause": "unlabelled",
+   "cause_note": "Top 3 are all direct lease-versus-buy answers"
+  },
+  {
+   "query_id": "3441",
+   "question": "ETF's for early retirement strategy",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": 75,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "580733",
+     "words": 288,
+     "text": "I think the dividend fund may not be what youre looking for. You mentioned you want growth, not income. But I think of dividend stocks as income stocks, not growth. They pay a dividend because these are established companies that do not need to invest so much in capex anymore, so they return it to shareholders. In other words, they are past their growth phase. These are what you want to hold when you have a large nest egg, you are ready to retire, and just want to make a couple percent a year without having to worry as much about market fluctuations. The Russel ETF you mentioned and other small caps are I think what you are after. I recently made a post here about the difference between inde ..."
+    },
+    {
+     "doc_id": "312406",
+     "words": 113,
+     "text": "This is the chart going back to the first full year of this fund. To answer your question - yes, a low cost ETF or Mutual fund is fine. Why not go right to an S&P index? VOO has a .05% expense. Why attracted you to a choice that lagged the S&P by $18,000 over this 21 year period? (And yes, past performance, yada, yada, but that warning is appropriate for the opposite example. When you show a fund that beat the S&P short term, say 5 years, its run may be over. But this fund lagged the S&P by a significant margin over 2 decades, what makes you think this will change?"
+    },
+    {
+     "doc_id": "237133",
+     "words": 223,
+     "text": "\"If your intention is to purchase ETFs on a regular basis (like $x per month), then ETFs may not make sense. You may have to pay a fixed transaction cost like you were buying a stock for each purchase. In a similar no load mutual fund, there are more likely to be no transaction costs (depending on how it is bought). The above paragraph is not very definitive, and is really dependent upon how you would purchase either ETFs or Mutual funds. For example if you have a Fidelity brokerage account, they may let you buy certain ETFs commission free. Okay then either ETFs make great sense. It would not make sense to buy ones that they charge $35 per transaction if you have regular transactions that a ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "138274",
+     "text": "I use the following allocation in my retirement portfolio: I prefer these because: Expense Ratios Oh, and by their very definition, ETFs are very liquid. EDIT: The remaining 10% is the speculative portion of my portfolio. Currently, I own shares in HAP (as a hedge against rising commodity prices) and TIP (as a hedge against hyperinflation)."
+    },
+    {
+     "doc_id": "177036",
+     "text": "@bstpierre gave you an example of a portfolio similar to IFA's 70 portfolio. Please, look other variants of example portfolios there and investigate which would suit to you. Although the example portfolios are not ETF-based, required by the op, you can rather easily check corresponding components with this tool here. Before deciding your portfolio, fire up a spreadsheet (samples here) and do calcu ..."
+    },
+    {
+     "doc_id": "451196",
+     "text": "Life Strategy funds are more appropriate if you want to maintain a specific allocation between stocks and bonds that doesn't automatically adjustment like the Target Retirement funds which have a specific date. Thus, it may make more sense to take whichever Life Strategy fund seems the most appropriate and ride with it for a while unless you know when you plan to retire and access those funds. In  ..."
+    }
+   ],
+   "cause": "unlabelled",
+   "cause_note": "Top results are ETF retirement allocations"
+  },
+  {
+   "query_id": "60",
+   "question": "Can Health-Releated Services be a Business Expense?",
+   "best_relevant_rank": {
+    "hybrid": 14,
+    "dense": 20,
+    "bm25": 16
+   },
+   "relevant": [
+    {
+     "doc_id": "381151",
+     "words": 94,
+     "text": "Chris, since you own your own company, nobody can stop you from charging your personal expenses to your business account. IRS is not a huge fan of mixing business and personal expenses and this practice might indicate to them that you are not treating your business seriously, and it should classify your business as a hobby. IRS defines deductible business expense as being both: ordinary AND necessary. Meditation is not an ordinary expense (other S-corps do not incur such expense.) It is not a necessary expense either. Therefore, you cannot deduct this expense. http://www.irs.gov/Businesses/Small-Businesses-&-Self-Employed/Deducting-Business-Expenses"
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "231449",
+     "text": "Doesn't matter what the product is, whether it's a tangible good or a service, a business is still a business and must be run as thus. If you don't run a hospital properly, as a business that provides a service, then that hospital is soon to be threatened with closure or state take-over."
+    },
+    {
+     "doc_id": "510863",
+     "text": "No. The equipment costs are not necessarily a direct expense. Depending on the time of purchase and type of the expenditure you may need to capitalize it and depreciate it over time. For example, if you buy a computer - you'll have to depreciate it over 5 years. Some expenditures can be expensed under Section 179 rules, but there are certain conditions to be made, including business revenue. So if ..."
+    },
+    {
+     "doc_id": "513362",
+     "text": "Yes, the business can count that as an expense but you will need to count that as income because a computer = money."
+    }
+   ],
+   "cause": "aspect",
+   "cause_note": "Top results cover business expenses in general, not health services; relevant at rank 14"
+  },
+  {
+   "query_id": "2215",
+   "question": "How does a lender compute equity requirement for PMI?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "392911",
+     "words": 188,
+     "text": "Never ever use a giant monster mega bank for home loans. I am sure you probably didn't and they bought your loan from someone else. You have no legal options. What you should do Is look at getting a new loan maybe a 15 year loan. Your payment might be the same with no PMI. I would check with a relator to see what they think your home is worth. Also if you have any money you can always pay extra to the principle and get yourself to 20% based on the next appraisal. You might have a legal option regarding what they say you need in value 350k is what it should appraise to for you to get rid of pmi when you owe 280k Remember Citibank is a publicly traded company and their goal is to make more mon ..."
+    },
+    {
+     "doc_id": "32576",
+     "words": 381,
+     "text": "In regards to the legal recourse, no there is none. Also, despite your frustrations with Citi, it may not be their fault. Mortgage companies are now forced to select appraisers (essentially at random) through 3rd party Appraisal Resource Companies (ARCs). This randomization mandate from the government was issued in order to combat fraud, but it is really causing more trouble for homeowners because it took away appraiser accountability. Basically, there's nothing we can do to fire an appraiser anymore. I've had appraiser do terrible jobs, just blatantly wrong, and have gone the distance with the dispute process only to find they won't change the value. My favorite real-life example came from  ..."
+    },
+    {
+     "doc_id": "366215",
+     "words": 72,
+     "text": "Do you have any legal options? Not really. Citi is under no obligation to refinance your loan on your terms. But that goes both ways, and you are under no obligation to refinance with Citi! Get more quotes from another lender. It'll feel really good when you find a lender that wants your business. You might get a better deal. And think how good it will feel to cut ties with Citi!"
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "234890",
+     "text": "1 - For FHA loans PMI is required for mortages where there is not at least 20% equity. Bank Financed Non-FHA loans may have other standards. If you are getting an FHA loan ,if possible put down 20% so that you do not have to pay PMI. That said your PMI costs should be reduced by the size of your down payment since the PMI covers the difference between your equity value (Based on the appraisal at t ..."
+    },
+    {
+     "doc_id": "309298",
+     "text": "\"The PMI premium you pay is dependent on a very large number of variables in the finance market. Mortgage insurance, at the higher inter-bank levels, is handled with credit default swaps (the ones you've been hearing about on the news for the past 4 years), where the lender bundles a block of mortgages, takes them to a guarantor like AIG or Freddie Mac, and says \"\"We bet you that these mortgages w ..."
+    },
+    {
+     "doc_id": "201140",
+     "text": "Once you hit 22% equity against the original value of the home, they have to cancel the PMI. No other factors come into play. See this nice overview. Before that, at the 20% equity mark, it's a negotiating situation. If the value of the house goes down, that's a strong point in their favour. But you have excellent history, that's strong in your favour."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Top results explain PMI equity rules directly; labelled answers are about a dispute with one bank over an appraisal"
+  },
+  {
+   "query_id": "17",
+   "question": "Income tax exemptions for small business?",
+   "best_relevant_rank": {
+    "hybrid": 85,
+    "dense": 72,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "146657",
+     "words": 265,
+     "text": "Yes, you should be able to deduct at least some of these expenses. For expense incurred before you started the business: What Are Deductible Startup Costs? The IRS defines \u201cstartup costs\u201d as deductible capital expenses that are used to pay for: 1) The cost of \u201cinvestigating the creation or acquisition of an active trade or business.\u201d This includes costs incurred for surveying markets, product analysis, labor supply, visiting potential business locations and similar expenditures. 2) The cost of getting a business ready to operate (before you open your doors or start generating income). These include employee training and wages, consultant fees, advertising, and travel costs associated with fi ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "388713",
+     "text": "As a new (very!) small business, the IRS has lots of advice and information for you. Start at https://www.irs.gov/businesses/small-businesses-self-employed and be sure you have several pots of coffee or other appropriate aid against somnolence. By default a single-member LLC is 'disregarded' for tax purposes (at least for Federal, and generally states follow Federal although I don't know Mass. spe ..."
+    },
+    {
+     "doc_id": "253210",
+     "text": "This may not exactly answer your question but, as a small business owner, I would highly recommend having a professional handle your taxes. It is worth the money to have it done correctly rather than doing something wrong and getting audited or worse having penalties assessed and owing more than you thought would be possible. I would recommend this especially if this is how you make your primary i ..."
+    },
+    {
+     "doc_id": "156554",
+     "text": "\"This is a great question! I've been an entrepreneur and small business owner for 20+ years and have started small businesses in 3 states that grew into nice income streams for me. I've lived off these businesses for 20+ years, so I know it can be done! First let me start by saying that the rules, regulations, requirements and laws for operating a business (small or large) legally, for the most pa ..."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Labelled answer is about deducting start-up costs; title asks about exemptions in general"
+  },
+  {
+   "query_id": "6344",
+   "question": "Getting money from online websites I own to my UK bank account",
+   "best_relevant_rank": {
+    "hybrid": 51,
+    "dense": 47,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "128322",
+     "words": 395,
+     "text": "Now i want to get this money in my new UK bank account, does this mean that gov will take taxes from this money as well. Yes that is income and you have to pay tax on that. But it might be a bit complicated than that, so I would ask you to call up HMRC or visit an accountant or maybe ask the finance people of your employer. Also one of my family members send us money every few months and will send to this bank from now on, does taxes also apply on this? See the HMRC page about capital gains tax on gifts: You won't have to pay Capital Gains Tax when you give a gift to your husband, wife or civil partner - as long as both of the following apply: It's useful to keep a note of what the asset cos ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "545990",
+     "text": "I have just established a limited company (three directors spread around the UK) and I am in the process of setting up a business account. We will be able to arrange everything over the phone and each of us will have to appear in one of the branches with original documents: passport, bank statement. We are EU citizens and have UK bank accounts for over 5 years. That would probably be a problem for ..."
+    },
+    {
+     "doc_id": "262485",
+     "text": "No you will have no problems. It's been fourteen years since I've lived in the UK and I've had no trouble with my UK bank accounts in that time. They have happily mailed me statements and new cards abroad for all that time, and I've deposited cheques by mailing them to the branch. Online banking takes care of almost everything else. The only thing I wasn't able to do from abroad was open a new acc ..."
+    },
+    {
+     "doc_id": "310103",
+     "text": "\"It's generally not possible to open a business account in the UK remotely. It's even difficult (near impossible) for a non-resident (even if a citizen) to open a business or personal bank account while visiting the UK. A recent report says that it may be possible to open an account via Barclays Offshore in the Isle of Man. This requires a large deposit, and probably lots of paperwork and fees (mo ..."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Labelled answer is about UK tax on the income; top results are about UK bank accounts"
+  },
+  {
+   "query_id": "7826",
+   "question": "What will happen to my shares if company delisted",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "519877",
+     "words": 109,
+     "text": "If they own enough shares to vote to sell, you will be paid the offer price quoted to you. At that point if you do not wish to sell your only recourse will be to file a lawsuit. This is a common tactic for significant shareholders who have a minority stake and cannot block the sale because they have insufficient voting rights. What usually happens then is that they either settle the lawsuit out of court by paying a little more to the holdouts or the lawsuit is thrown out and they take the original offer from the buyer. Rarely does a lawsuit from a buyout go to trial."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "20675",
+     "text": "If the company went bankrupt, the issued public shares that were outstanding at the time most likely were voided, in which case your shares are most definitely gone. The company might have done a new stock issuance coming out of bankruptcy with a different symbol, and while it could be substantially the same company, it doesn't mean much for you. It's unfortunate this may be the case, but it is on ..."
+    },
+    {
+     "doc_id": "231677",
+     "text": "\"The only thing that makes a stock worthless is when the company goes out of business. Note that bankruptcy, by itself, does not mean the company is closing. It could successfully restructure its affairs and come out of bankruptcy with a better outlook. Being a small or unprofitable business may cause a company's to trade in the \"\"penny stock\"\" range, but there is still some value there. Since mos ..."
+    },
+    {
+     "doc_id": "142401",
+     "text": "It depends. If you accept the offer, then your stock will cease existing. If you reject the offer, then you will become a minority shareholder. Depending on the circumstances, you could be in the case where it becomes illegal to trade your shares. That can happen if the firm ceases to be a public company. In that case, you would discount the cash flows of future dividends to determine worth becaus ..."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Top results answer the delisting question; labelled answer is about a buyout offer to minority shareholders"
+  },
+  {
+   "query_id": "5569",
+   "question": "What's the difference between \u201cIndex\u201d and \u201cAccumulation\u201d tracker funds?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "389077",
+     "words": 79,
+     "text": "Whenever a website mentions Hypothetical Growth of $100, $1,000, or $10,000, it assumes that that investor himself will reinvest the dividend. This is true whether you look at Morningstar or Financial Times. Unless the website does not have dividend data, e.g. Google Finance. If you want to compare the account value after withdrawing dividends: Since the Income class pays dividends annually, there will be 1 jumps per year. For example, the 2013 dividend payment: and the 2014 dividend payment:"
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "408524",
+     "text": "Index Funds & ETFs, if they are tracking the same index, will be the same in an ideal world. The difference would be because of the following factors: Expense ratio: i.e. the expense the funds charge. This varies and hence it would lead to a difference in performance. Tracking error: this means that there is a small percentage of error between the actual index composition and the fund composition. ..."
+    },
+    {
+     "doc_id": "367960",
+     "text": "\"I think you are asking about actively managed funds vs. indexes and possibly also vs. diversified funds like target date funds. This is also related to the question of mutual fund vs. ETF. First, a fund can be either actively managed or it can attempt to track an index. An actively managed fund has a fund manager who tries to find the best stocks to invest in within some constraints, like \"\"this  ..."
+    },
+    {
+     "doc_id": "298350",
+     "text": "\"Index funds may invest either in index components directly or in other instruments (like ETFs, index options, futures, etc.) which are highly correlated with the index. The specific fund prospectus or description on any decent financial site should contain these details. Index funds are not actively managed, but that does not mean they aren't managed at all - if index changes and the fund include ..."
+    }
+   ],
+   "cause": "vocabulary",
+   "cause_note": "Labelled answer talks about reinvested dividends and the 'Income' class; it never uses 'index' or 'tracker'"
+  },
+  {
+   "query_id": "1320",
+   "question": "As a total beginner, how do I begin to understand finance & stocks?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": 93,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "362462",
+     "words": 342,
+     "text": "Your understanding of the stock market is absolutely correct theoretically. However there is a lot more to it. A stock on a given day is effected by a lot of factors. These factors could really be anything. For example, if you are buying a stock in an agricultural company and there was no rainfall this year, there is a big chance that your stock will lose value. There is also a chance that a war breaks out tomorrow and due to all the government spending on the war, the economy collapses and effects the prices of stocks. Why does this happen? This happens because bad rainfall or war can get people to lose confidence in a stock market. On the other hand GDP growth and low unemployment rates ca ..."
+    },
+    {
+     "doc_id": "18355",
+     "words": 443,
+     "text": "\"Your questions seek answers to specifics, but I feel that you may need more general help. There are two things, I feel, that you need to learn about in the general category of personal finance. Your asking questions about investing, but it is not as important, IMHO, as how you manage your day-to-day operations. For example, you should first learn to budget. In personal finance often times \"\"living on a budget\"\" equates to poor, or low income. That is hardly the case. A budget is a plan on how to spend money. It should be refreshed each and every month and your income should equal your expenses. You might have in your budget a $1200 trip into the city to see a concert, hardly what a low inco ..."
+    },
+    {
+     "doc_id": "307008",
+     "words": 658,
+     "text": "\"I think you've got basics, but you may have the order / emphasis a bit wrong. I've changed the order of the things you've learned in to what I think is the most important to understand: Owning a stock is like owning a tiny chunk of the business Owning stock is owning a tiny chunk of the business, it's not just \"\"like\"\" it. The \"\"tiny chunks\"\" are called shares, because that is literally what they are, a share of the business. Sometimes shares are also called stocks. The words stock and share are mostly interchangeable, but a single stock normally means your holding of many shares in a business, so if you have 100 shares in 1 company, that's a stock in that company, if you then buy 100 share ..."
+    },
+    {
+     "doc_id": "115134",
+     "words": 209,
+     "text": "How I understand it is: supply/demand affect price of stock negatively/positively, respectively. Correct. Volume is the amount of buying/selling activity in these stocks (more volume = more fluctuation, right?). Sort of. Higher volume means higher liquidity. That is, a stock that is traded more is easier to trade. It doesn't necessarily mean more fluctuation and in the real world, it often means that these are well-understood stocks with a high amount of analyst coverage. This tends towards these stocks not being as volatile as smaller stocks with less liquidity. Company revenue (and profit) will help an investor predict company growth. That is one factor in a stock price. There are certain  ..."
+    },
+    {
+     "doc_id": "333916",
+     "words": 101,
+     "text": "Let me first give you my definitions of the words 'investor' and 'speculator'. To me, anyone looking to 'buy low, sell high' is a speculator. Only 'buy and hold' people are investors. The news agencies love to report on changes in the price of a stock. This gives them something to talk about. So speculation is encouraged by the news media. What investors care about is dividends. In my opinion whatwhat news agencies should report on are changes to the dividend provided by a security. I used to be a speculator, but now that I am retired I am an investor."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "335798",
+     "text": "Try downloading a finance app like yahoo finance. Follow a few stocks, read through the articles - look up terms you don\u2019t understand. Search them on YouTube, Investopedia, - note book recommendations. Learn some economics as well. Even if you\u2019re not interested in trading, this should help you learn the language enough to get an idea of what\u2019s out there - how money is thought of in different time  ..."
+    },
+    {
+     "doc_id": "201884",
+     "text": "A couple of good books I enjoyed and found very understandable (regarding the stock market): As for investment information you can get lost for days in Investopedia. Start in the stock section and click around. The tutorials here (free) give a good introduction to different financial topics. Regarding theoretical knowledge: start with what you know well, like your career or your other interests. Y ..."
+    },
+    {
+     "doc_id": "497731",
+     "text": "Can anyone recommend a good textbook for a first course in finance? I'm not studying it, if it's relevant--I'm just a guy who wants a better understanding of the financial sector. I don't know anything anout finance outside a few basic concepts."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Top results suggest how a beginner can learn; labelled answers correct specific points in the question post"
+  },
+  {
+   "query_id": "4164",
+   "question": "Where should I be investing my money?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "130812",
+     "words": 69,
+     "text": "\"Pay off your debt. As you witnessed, no \"\"investment\"\" % is guaranteed. But your debt payments are... so if you have cash, the best way to \"\"invest\"\" it is to pay off your debt. Since your car is depreciating while your house may be appreciating (don't know but it's possible) you should pay off your car loan first. You're losing money in more than one way on that investment.\""
+    },
+    {
+     "doc_id": "458740",
+     "words": 161,
+     "text": "Don't be too scared of investing in the market. It has ups and downs, but over the long haul you make money in it. You can't jump in and out, just consistently add money to investments that you 1) understand and 2) trust. When I say understand, what I mean is you can follow how the money is generated, either because a company sells products, a government promises to pay back the bond, or compounding interest makes sense. You don't need to worry about the day to day details, but if you don't understand how the money is made, it isn't transparent enough and a danger could be afoot. Here are some basic rules I try (!) to follow The biggest trick is to invest what you can, and do so consistently ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "51182",
+     "text": "Fundamental rule of investing money : Now come to the point, best money investment"
+    },
+    {
+     "doc_id": "326872",
+     "text": "First, put the money someplace that is safe - a saving account is fine - while you figure out what you want to do with it. You will obviously want to think about it what to do for a while. A financial advisor could help out, but not that many of them make their money on commission and therefore don't act in your best interest. The ones where you pay them directly are more aligned with your interes ..."
+    },
+    {
+     "doc_id": "280530",
+     "text": "Most people carry a diversity of stock, bond, and commodities in their portfolio. The ratio and types of these investments should be based on your goals and risk tolerance. I personally choose to manage mine through mutual funds which combine the three, but ETFs are also becoming popular. As for where you keep your portfolio, it depends on what you're investing for. If you're investing for retirem ..."
+    }
+   ],
+   "cause": "body",
+   "cause_note": "Title is 'Where should I be investing my money?'; labelled answer says to pay off a car loan from the post"
+  },
+  {
+   "query_id": "8803",
+   "question": "Stock sale cost basis calculations for 2013, now that rules changed, is FIFO or another method the smartest financially?",
+   "best_relevant_rank": {
+    "hybrid": null,
+    "dense": null,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "335375",
+     "words": 158,
+     "text": "\"Once again I offer some sage advice - \"\"Don't let the tax tail wag the investing dog.\"\" Michael offers an excellent method to decide what to do. Note, he doesn't base the decision on the tax implication. If you are truly indifferent to holding the stock, taxwise, you might consider selling just the profitable shares if that's enough cash. Then sell shares at a loss each year if you have no other gains. That will let you pay the long term gain rate on the shares sold this year, but offset regular income in years to come. But. I'm hard pressed to believe you are indifferent, and I'd use Michel's approach to decide. Updated - The New Law is simply a rule requiring brokers to track basis. Your  ..."
+    },
+    {
+     "doc_id": "322284",
+     "words": 97,
+     "text": "\"You have to calculate the total value of all shares and then ask yourself \"\"Would I invest that amount of money in this stock?\"\" If the answer is yes, then only sell what you need to sell. Take the $3k loss against your income, if you have no other gains. If you would not invest that amount of cash in that stock, then sell it all right now and carry forward the excess loss every year. Note at any point you have capital gains you can offset all of them with your loss carryover (not just $3k).\""
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "104453",
+     "text": "To sum up: My question came from misunderstanding what cost basis applies to. Now I get it that it applies to stocks as physical entities. Consider a chain of buys of 40 stock A with prices $1-$4-$10-$15 (qty 10 each time) then IRS wants to know exactly which stock I am selling. And when I transfer stocks to different account, that cost basis transfers with them. Cost basis is included in transfer ..."
+    },
+    {
+     "doc_id": "402216",
+     "text": "\"Generally if you are using FIFO (first in, first out) accounting, you will need to match the transactions based on the number of shares. In your example, at the beginning of day 6, you had two lots of shares, 100 @ 50 and 10 @ 52. On that day you sold 50 shares, and using FIFO, you sold 50 shares of the first lot. This leaves you with 50 @ 50 and 10 @ 52, and a taxable capital gain on the 50 shar ..."
+    },
+    {
+     "doc_id": "132219",
+     "text": "Calculating and adjusting cost basis accurately is a daunting task, but there is a (paid) online tool, NetBasis, which will automatically calculate and adjust your cost basis. It is used by brokerage firms and Fortune 500 companies and is available to the public. Go to netbasis.com. All you need are the purchase and sale dates and shares of the stock or mutual fund and the system has the rest of t ..."
+    }
+   ],
+   "cause": "vocabulary",
+   "cause_note": "Labelled answers advise on selling at a loss without mentioning cost basis or FIFO; top results explain FIFO"
+  },
+  {
+   "query_id": "3816",
+   "question": "How exactly does dealing in stock make me money?",
+   "best_relevant_rank": {
+    "hybrid": 28,
+    "dense": 28,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "537783",
+     "words": 339,
+     "text": "This is a very good question! The biggest difference is that when you put money in a savings bank you are a lender that is protected by the government, and when you buy stocks you become an owner. As a lender, whether the bank makes or loses money on the loans it makes, they still maintain your balance and pay you interest, and your principal balance is guaranteed by the government (in the USA). The bank is the party that is primarily at risk if their business does not perform well. As an owner, you participate fully in the company's gains and losses, but you also put your money at risk, since if the company loses money, you do too. Because of this, many people prefer to buy funds made up of ..."
+    },
+    {
+     "doc_id": "540462",
+     "words": 26,
+     "text": "You can make money via stocks in two primary ways: Note that there's no guarantee of either. So it may very well not make you money."
+    },
+    {
+     "doc_id": "464297",
+     "words": 471,
+     "text": "If you have money and may need to access it at any time, you should put it in a savings account. It won't return much interest, but it will return some and it is easily accessible. If you have all your emergency savings that you need (at least six months of income), buy index-based mutual funds. These should invest in a broad range of securities including both stocks and bonds (three dollars in stocks for every dollar in bonds) so as to be robust in the face of market shifts. You should not buy individual stocks unless you have enough money to buy a lot of them in different industries. Thirty different stocks is a minimum for a diversified portfolio, and you really should be looking at more  ..."
+    },
+    {
+     "doc_id": "524949",
+     "words": 30,
+     "text": "If you buy a stock and it goes up, you can sell it and make money. But if you buy a stock and it goes down, you can lose money."
+    },
+    {
+     "doc_id": "456373",
+     "words": 477,
+     "text": "\"Generally, a share of stock entitles the owner to all future per-share dividends paid by the company, plus a fraction of the company's assets net value in the event of liquidation. If one knew in advance the time and value of all such payouts, the value of the stock should equal the present cash value of that payout stream, which would in turn be the sum of the cash values of all the individual payouts. As time goes by, the present cash value of each upcoming payout will increase until such time as it is actually paid, whereupon it will cease to contribute to the stock's value. Because people are not clairvoyant, they generally don't know exactly what future payouts a stock is going to make ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "11075",
+     "text": "In my experience they charge you coming and going. For example, if a brokerage firm is advertising that their commissions are only $7/trade, then that means you pay money to buy the stock, plus $7 to them, and later on if you want to sell that stock you must pay $7 to get out of the deal. So, if you want to make any money on a stock (say, priced at $10) you would have to sell it at a price above $ ..."
+    },
+    {
+     "doc_id": "154976",
+     "text": "Cash changes hands when you buy or sell the stock. While you own the stock, you own it, not cash, so there is no cash to go anywhere. You spent your money when you bought. The seller got that money. It's gone. You hope that when you sell the stock, someone will give you more money for it than you spent. But they may give you less. Money doesn't magically appear either way, it comes from the buyer. ..."
+    },
+    {
+     "doc_id": "330303",
+     "text": "There are two main ways you can make money through shares: through dividends and through capital gains. If the company is performing well and increasing profits year after year, its Net Worth will increase, and if the company continues to beat expectations, then over the long term the share price will follow and increase as well. On the other hand, if the company performs poorly, has a lot of debt ..."
+    }
+   ],
+   "cause": "unlabelled",
+   "cause_note": "Third result says there are two ways to make money from shares, dividends and capital gains; relevant at rank 28"
+  },
+  {
+   "query_id": "5909",
+   "question": "Where to borrow money between college graduation and employment?",
+   "best_relevant_rank": {
+    "hybrid": 25,
+    "dense": 25,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "506567",
+     "words": 461,
+     "text": "\"You have a few options, none of which are trade off free: Apply for a credit card, and live off of that. Here, of course, you will go into debt, and there are minimums to pay. But, it will tide you over. In any case, you are getting unsecured credit, so your rates will probably be very, very high. You don't want to build up a lot of 20% per annum debt. An alternative to this would be to go to any bank and ask for an unsecured loan. Having no income, it will be difficult, though not necessarily impossible, to secure some funds. When I was in between houses, once, for example, I was able to borrow $30,000 in unsecured debt (to help me construct my new house!), just based on my income. Grant y ..."
+    },
+    {
+     "doc_id": "340653",
+     "words": 314,
+     "text": "You have asked about getting a loan, the issue is that you don't have collateral to offer up in exchange for the loan, you also don't have a regular source of income. Getting a low level job, even one not related to your major will provide income. Getting a not-so-perfect job related to your major will allow your to sustain yourself, and provide experience that can help you find the perfect job. The time from application to interview to offer letter to start date can be measured in months. This is even with positions you are perfect for. Since it can take months to get started in a new job you should focus on something that you can get started right away. This type of job will have a shorter ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "293897",
+     "text": "\"Let me run some simplistic numbers, ignoring inflation. You have the opportunity to borrow up to 51K. What matters (and varies) is your postgraduation salary. Case 1 - you make 22K after graduation. You pay back 90 a year for 30 years, paying off at most 2700 of the loan. In this case, whether you borrow 2,800 or 28,000 makes no difference to the paying-off. You would do best to borrow as much as ..."
+    },
+    {
+     "doc_id": "163881",
+     "text": "\"Since you're also looking for alternative means of funding, have you considered doing part-time work -- during the holidays or on some of the weekends? With this kind of financing you have to watch out that the work does not interfere with your study. On the other hand it can be valuable work experience that can come in handy later in your life, such as when applying for your first \"\"real\"\" job.  ..."
+    },
+    {
+     "doc_id": "542194",
+     "text": "The earlier you are in your career, the more willing you should be to take a better opportunity even if it has a short-term financial cost. You go to college even if McDonald's has an opening. After college you may take an entry level job with better long-term prospects even if a higher paying job is available. You may train for some professional qualification. Having expenses you have to pay limi ..."
+    }
+   ],
+   "cause": "aspect",
+   "cause_note": "Top results are about student loans and part-time work during study, not the gap after graduation"
+  },
+  {
+   "query_id": "6185",
+   "question": "I've got $100K to invest over the next 2 to 7 years. What are some good options?",
+   "best_relevant_rank": {
+    "hybrid": 14,
+    "dense": 13,
+    "bm25": null
+   },
+   "relevant": [
+    {
+     "doc_id": "526808",
+     "words": 60,
+     "text": "Given your timeframe, risk tolerance, and the fact that you don't need this money, I would suggest a balanced approach. Something like: If you want to have fun investing, you could look into things like lendingclub, or bonds, or stocks, etc. But an allocation like I've outlined above is a pretty good balance of risk and reward over that timeframe."
+    },
+    {
+     "doc_id": "318873",
+     "words": 97,
+     "text": "One of the things I would suggest looking into is peer-to-peer lending. I do lendingclub.com, but with a lot less money, and have only done it a short period of time. Still my return is about 13%. In your case you would probably have to commit to about 3.5 years to invest your money. Buy 3 year notes, and as they are paid off pull the money out and put into a CD or money market.. They sell notes that are 3 or 5 year and you may not want to tie your money up that long."
+    },
+    {
+     "doc_id": "461435",
+     "words": 107,
+     "text": "Well, a proper answer needs a few more details: 1) What's your marginal tax bracket? (A CD is just plain silly for someone in a high tax bracket and in a high tax state) 2) What's your state of residence? 3) Do you have a 401k to draw on for a house loan in case of badly timed volatility? 4) What does will the rest of our investment portfolio look like in case of a sudden rise in interest rates? Depending on the answers to those questions, the mix of investments could be anywhere from: Tell me more about bracket/state/other investment mix and I can suggest something."
+    },
+    {
+     "doc_id": "30352",
+     "words": 276,
+     "text": "I like precious metals and real estate. For the OP's stated timeframe and the effects QE is having on precious metals, physical silver is not a recommended short term play. If you believe that silver prices will fall as QE is reduced, you may want to consider an ETF that shorts silver. As for real estate, there are a number of ways to generate profit within your time frame. These include: Purchase a rental property. If you can find something in the $120,000 range you can take a 20% mortgage, then refinance in 3 - 7 years and pull out the equity. If you truly do not need the cash to purchase your dream home, look for a rental property that pays all the bills plus a little bit for you and arra ..."
+    }
+   ],
+   "top3": [
+    {
+     "doc_id": "531965",
+     "text": "First, as Dheer mentioned above, there is no right answer as investment avenues for a person is dicteted by many subjective considerations. Given that below a few of my thoughts (strictly thoughts): 1) Have a plan for how much money you would need in next 5-7 years, one hint is, do you plan you buy a house, car, get married ... Try to project this requirement 2) Related to the above, if you have s ..."
+    },
+    {
+     "doc_id": "96949",
+     "text": "Depending what your timeframe preferences are, here are a couple of options: Stock indexes: as per Fool's investing guide, historically this had the highest return / risk ratio. On a 5-year horizont, with no extra work, this seems the best option. Premium bonds, similar to most cash ISAs currently available, have a rather rubbish ROI ATM (~3-5% AER at max) Invest it into yourself, in the form of p ..."
+    },
+    {
+     "doc_id": "98681",
+     "text": "There are lots of thing that people will pay for if you wait long enough. I don't know that I would consider them investments, but they go up in value."
+    }
+   ],
+   "cause": "unlabelled",
+   "cause_note": "Top results give investment options for a 5 to 7 year horizon; relevant at rank 14"
+  }
+ ]
+}
